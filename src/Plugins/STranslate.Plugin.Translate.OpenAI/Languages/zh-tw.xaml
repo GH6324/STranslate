@@ -21,5 +21,7 @@
     <sys:String x:Key="STranslate_Plugin_Translate_OpenAI_Validate">驗證</sys:String>
     <sys:String x:Key="STranslate_Plugin_Translate_OpenAI_ValidateBtnContent">驗證</sys:String>
     <sys:String x:Key="STranslate_Plugin_Translate_OpenAI_Validate_Description">測試 API 連接和配置是否正確</sys:String>
+    <sys:String x:Key="STranslate_Plugin_Translate_OpenAI_Temperature">溫度控制</sys:String>
+    <sys:String x:Key="STranslate_Plugin_Translate_OpenAI_Temperature_Description">控制模型輸出的隨機性</sys:String>
 
 </ResourceDictionary>

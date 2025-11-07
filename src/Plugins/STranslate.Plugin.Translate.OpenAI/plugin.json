@@ -1,7 +1,7 @@
 ﻿{
   "PluginID": "76b14a8d707041c891a2dcd2f74be9c1",
   "Name": "OpenAI",
-  "Description": "OpenAI plugin for stranslate",
+  "Description": "Official OpenAI plugin for STranslate",
   "Author": "zggsong",
   "Version": "1.0.0",
   "Website": "https://github.com/ZGGSONG/STranslate",

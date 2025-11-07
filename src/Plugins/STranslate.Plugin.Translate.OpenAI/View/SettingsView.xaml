@@ -106,6 +106,27 @@
             </ikw:SimpleStackPanel>
         </ui:SettingsCard>
 
+        <!--  温度控制  -->
+        <ui:SettingsCard Description="{DynamicResource STranslate_Plugin_Translate_OpenAI_Temperature_Description}" Header="{DynamicResource STranslate_Plugin_Translate_OpenAI_Temperature}">
+            <ui:SettingsCard.HeaderIcon>
+                <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.Temperature_20_Regular}" />
+            </ui:SettingsCard.HeaderIcon>
+
+            <ikw:SimpleStackPanel Orientation="Horizontal" Spacing="8">
+                <Slider
+                    x:Name="PART_TempSlider"
+                    MinWidth="200"
+                    IsSnapToTickEnabled="True"
+                    Maximum="2.0"
+                    Minimum="0.0"
+                    TickFrequency="0.1"
+                    TickPlacement="Both"
+                    Value="{Binding Temperature}" />
+
+                <TextBlock VerticalAlignment="Center" Text="{Binding ElementName=PART_TempSlider, Path=Value, StringFormat=F1}" />
+            </ikw:SimpleStackPanel>
+        </ui:SettingsCard>
+
         <!--  自动执行回译  -->
         <ui:SettingsCard Description="{DynamicResource STranslate_Plugin_Translate_OpenAI_AutoTransBack_Description}" Header="{DynamicResource STranslate_Plugin_Translate_OpenAI_AutoTransBack_Header}">
             <ui:SettingsCard.HeaderIcon>
