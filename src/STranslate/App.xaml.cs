@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using Serilog.Core;
+using Serilog.Events;
 using STranslate.Core;
 using STranslate.Helpers;
 using STranslate.Instances;
@@ -48,6 +50,20 @@ public partial class App : ISingleInstanceApp, INavigation, IDisposable
         // Do not use bitmap cache since it can cause WPF second window freezing issue
         ShadowAssist.UseBitmapCache = false;
 
+        // Configure Serilog
+        var levelSwitch = new LoggingLevelSwitch(LogEventLevel.Verbose);
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Override("System.Net.Http", LogEventLevel.Warning)
+            .MinimumLevel.Override("Microsoft.Extensions.Http", LogEventLevel.Warning)
+            .MinimumLevel.ControlledBy(levelSwitch)
+            .WriteTo.File(
+                path: Path.Combine(Constant.Logs, ".log"),
+                encoding: Encoding.UTF8,
+                rollingInterval: RollingInterval.Day,
+                outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] [{SourceContext}]: {Message:lj}{NewLine}{Exception}"
+            )
+            .CreateLogger();
+
         try
         {
             var appStorage = new AppStorage<Settings>();
@@ -80,6 +96,7 @@ public partial class App : ISingleInstanceApp, INavigation, IDisposable
                         builder.AddSerilog();
                         builder.SetMinimumLevel(LogLevel.Trace);
                     });
+                    services.AddSingleton(levelSwitch);
 
                     // 注册配置
                     services.AddSingleton(_settings.NonNull());
@@ -163,17 +180,6 @@ public partial class App : ISingleInstanceApp, INavigation, IDisposable
 
         // 注册编码提供程序以支持 GBK 等编码
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
-        Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Override("System.Net.Http", Serilog.Events.LogEventLevel.Warning)
-            .MinimumLevel.Override("Microsoft.Extensions.Http", Serilog.Events.LogEventLevel.Warning)
-            .WriteTo.File(
-                path: Path.Combine(Constant.Logs, ".log"),
-                encoding: Encoding.UTF8,
-                rollingInterval: RollingInterval.Day,
-                outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] [{SourceContext}]: {Message:lj}{NewLine}{Exception}"
-            )
-            .CreateLogger();
 
         _logger = Ioc.Default.GetRequiredService<ILogger<App>>();
         _logger.LogInformation("Begin STranslate startup ----------------------------------------------------");
