@@ -1,5 +1,4 @@
 using ScreenGrab;
-using STranslate.Plugin;
 using System.Drawing;
 
 namespace STranslate.Core;

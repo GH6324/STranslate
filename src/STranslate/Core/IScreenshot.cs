@@ -1,9 +1,9 @@
 using System.Drawing;
 
-namespace STranslate.Plugin;
+namespace STranslate.Core;
 
 /// <summary>
-/// 截图接口
+/// 截图接口，可以不要定义接口，懒得删了
 /// </summary>
 public interface IScreenshot
 {
