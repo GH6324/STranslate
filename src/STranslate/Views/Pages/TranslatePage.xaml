@@ -74,11 +74,7 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <Image
-                                Height="16"
-                                RenderOptions.BitmapScalingMode="HighQuality"
-                                SnapsToDevicePixels="True"
-                                Source="{Binding Instance.ImageTranslateService.MetaData.IconPath}" />
+                            <Image Height="16" Source="{Binding Instance.ImageTranslateService.MetaData.IconPath}" />
                             <TextBlock
                                 Grid.Column="1"
                                 Margin="5,0"
@@ -168,11 +164,7 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <Image
-                                Height="16"
-                                RenderOptions.BitmapScalingMode="HighQuality"
-                                SnapsToDevicePixels="True"
-                                Source="{Binding Instance.ReplaceService.MetaData.IconPath}" />
+                            <Image Height="16" Source="{Binding Instance.ReplaceService.MetaData.IconPath}" />
                             <TextBlock
                                 Grid.Column="1"
                                 Margin="5,0"

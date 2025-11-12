@@ -103,8 +103,6 @@
                             <Image
                                 Width="24"
                                 Height="24"
-                                RenderOptions.BitmapScalingMode="HighQuality"
-                                SnapsToDevicePixels="True"
                                 Source="{Binding IconPath}" />
                         </ui:SettingsCard.HeaderIcon>
                         <StackPanel>

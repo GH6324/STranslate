@@ -197,4 +197,9 @@
 
     <!--#endregion-->
 
+    <Style TargetType="Image">
+        <Setter Property="UseLayoutRounding" Value="True" />
+        <Setter Property="RenderOptions.BitmapScalingMode" Value="HighQuality" />
+    </Style>
+
 </ResourceDictionary>

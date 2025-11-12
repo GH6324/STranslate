@@ -113,7 +113,7 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <Image RenderOptions.BitmapScalingMode="HighQuality" Source="{Binding IconPath}" />
+                            <Image Source="{Binding IconPath}" />
                             <TextBlock
                                 Grid.Column="1"
                                 Margin="5,0,0,0"

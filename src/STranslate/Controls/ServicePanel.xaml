@@ -52,10 +52,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="40" />
                 </Grid.ColumnDefinitions>
-                <Image
-                    RenderOptions.BitmapScalingMode="HighQuality"
-                    SnapsToDevicePixels="True"
-                    Source="{Binding MetaData.IconPath}" />
+                <Image Source="{Binding MetaData.IconPath}" />
                 <control:EditableTextBlock
                     Grid.Column="1"
                     Margin="5,0,0,0"
@@ -146,10 +143,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="40" />
                 </Grid.ColumnDefinitions>
-                <Image
-                    RenderOptions.BitmapScalingMode="HighQuality"
-                    SnapsToDevicePixels="True"
-                    Source="{Binding MetaData.IconPath}" />
+                <Image Source="{Binding MetaData.IconPath}" />
                 <control:EditableTextBlock
                     Grid.Column="1"
                     Margin="5,0,0,0"
