@@ -244,43 +244,182 @@ public class Utilities
     /// <returns>返回当前选中的文本</returns>
     private static async Task<string?> GetSelectedTextImplAsync(int timeout = 2000)
     {
-        var originalText = GetText();
-        uint originalSequence = PInvoke.GetClipboardSequenceNumber();
+        var clipboardBackup = await CreateClipboardBackupAsync();
 
-        // 发送复制命令
-        SendCtrlCV();
-
-        var startTime = Environment.TickCount;
-        var hasSequenceChanged = false;
-
-        while (Environment.TickCount - startTime < timeout)
+        try
         {
-            uint currentSequence = PInvoke.GetClipboardSequenceNumber();
+            var originalText = GetText();
+            uint originalSequence = PInvoke.GetClipboardSequenceNumber();
 
-            // 检查序列号是否变化
-            if (currentSequence != originalSequence)
+            // 发送复制命令
+            SendCtrlCV();
+
+            var startTime = Environment.TickCount;
+            var hasSequenceChanged = false;
+
+            while (Environment.TickCount - startTime < timeout)
             {
-                hasSequenceChanged = true;
-                // 序列号变化后，等待一段时间确保内容完全更新
-                await Task.Delay(30);
-                break;
+                uint currentSequence = PInvoke.GetClipboardSequenceNumber();
+
+                // 检查序列号是否变化
+                if (currentSequence != originalSequence)
+                {
+                    hasSequenceChanged = true;
+                    // 序列号变化后，等待一段时间确保内容完全更新
+                    await Task.Delay(30);
+                    break;
+                }
+
+                await Task.Delay(10);
             }
 
-            await Task.Delay(10);
+            var currentText = GetText();
+
+            // 如果序列号变化了，或者内容发生了变化，或者原本就没有内容
+            if (hasSequenceChanged ||
+                !string.IsNullOrEmpty(currentText) ||
+                currentText != originalText)
+            {
+                return currentText?.Trim();
+            }
+
+            await RestoreClipboardAsync(clipboardBackup);
+            return default; // 没有检测到变化
         }
-
-        var currentText = GetText();
-
-        // 如果序列号变化了，或者内容发生了变化，或者原本就没有内容
-        if (hasSequenceChanged ||
-            currentText != originalText ||
-            string.IsNullOrEmpty(originalText))
+        catch
         {
-            return currentText?.Trim();
+            await RestoreClipboardAsync(clipboardBackup);
+            return default;
         }
-
-        return null; // 没有检测到变化
     }
+
+    #region Clipboard Backup
+
+    /// <summary>
+    /// 创建剪贴板备份
+    /// </summary>
+    private static async Task<ClipboardBackup?> CreateClipboardBackupAsync()
+    {
+        try
+        {
+            await Task.Run(() => TryOpenClipboard());
+
+            var backup = new ClipboardBackup();
+
+            // 备份所有支持的格式
+            foreach (var format in SupportedFormats)
+            {
+                if (PInvoke.IsClipboardFormatAvailable(format))
+                {
+                    var handle = PInvoke.GetClipboardData(format);
+                    if (!handle.IsNull)
+                    {
+                        var size = PInvoke.GlobalSize(new HGLOBAL(handle.Value));
+                        if (size > 0)
+                        {
+                            unsafe
+                            {
+                                var pointer = PInvoke.GlobalLock(new HGLOBAL(handle.Value));
+                                if (pointer != null)
+                                {
+                                    try
+                                    {
+                                        var buffer = new byte[size];
+                                        Marshal.Copy((IntPtr)pointer, buffer, 0, (int)size);
+                                        backup.FormatData[format] = buffer;
+                                    }
+                                    finally
+                                    {
+                                        PInvoke.GlobalUnlock(new HGLOBAL(handle.Value));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            PInvoke.CloseClipboard();
+            return backup;
+        }
+        catch
+        {
+            try { PInvoke.CloseClipboard(); } catch { }
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// 恢复剪贴板内容
+    /// </summary>
+    private static async Task RestoreClipboardAsync(ClipboardBackup? backup)
+    {
+        if (backup?.FormatData == null || backup.FormatData.Count == 0)
+            return;
+
+        try
+        {
+            await Task.Run(() =>
+            {
+                TryOpenClipboard();
+                PInvoke.EmptyClipboard();
+
+                foreach (var (format, data) in backup.FormatData)
+                {
+                    RestoreClipboardFormat(format, data);
+                }
+
+                PInvoke.CloseClipboard();
+            });
+        }
+        catch
+        {
+            try { PInvoke.CloseClipboard(); } catch { }
+        }
+    }
+
+    /// <summary>
+    /// 恢复特定格式的剪贴板数据
+    /// </summary>
+    private static unsafe void RestoreClipboardFormat(uint format, byte[] data)
+    {
+        var hGlobal = PInvoke.GlobalAlloc(GLOBAL_ALLOC_FLAGS.GMEM_MOVEABLE, (nuint)data.Length);
+        if (hGlobal.IsNull) return;
+
+        try
+        {
+            var target = PInvoke.GlobalLock(hGlobal);
+            if (target != null)
+            {
+                try
+                {
+                    Marshal.Copy(data, 0, (IntPtr)target, data.Length);
+                }
+                finally
+                {
+                    PInvoke.GlobalUnlock(hGlobal);
+                }
+            }
+
+            PInvoke.SetClipboardData(format, new HANDLE(hGlobal.Value));
+            hGlobal = default; // 防止在finally中释放
+        }
+        finally
+        {
+            if (!hGlobal.IsNull)
+                PInvoke.GlobalFree(hGlobal);
+        }
+    }
+
+    /// <summary>
+    /// 剪贴板备份数据结构
+    /// </summary>
+    private class ClipboardBackup
+    {
+        public Dictionary<uint, byte[]> FormatData { get; } = new();
+    }
+
+    #endregion
 
     #endregion
 
