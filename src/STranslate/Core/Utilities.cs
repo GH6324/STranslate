@@ -244,7 +244,7 @@ public class Utilities
     /// <returns>返回当前选中的文本</returns>
     private static async Task<string?> GetSelectedTextImplAsync(int timeout = 2000)
     {
-        var clipboardBackup = await CreateClipboardBackupAsync();
+        var clipboardBackup = CreateClipboardBackup();
 
         try
         {
@@ -283,13 +283,15 @@ public class Utilities
                 return currentText?.Trim();
             }
 
-            await RestoreClipboardAsync(clipboardBackup);
             return default; // 没有检测到变化
         }
         catch
         {
-            await RestoreClipboardAsync(clipboardBackup);
             return default;
+        }
+        finally
+        {
+            await RestoreClipboardAsync(clipboardBackup);
         }
     }
 
@@ -298,44 +300,48 @@ public class Utilities
     /// <summary>
     /// 创建剪贴板备份
     /// </summary>
-    private static async Task<ClipboardBackup?> CreateClipboardBackupAsync()
+    private static unsafe ClipboardBackup? CreateClipboardBackup()
     {
         try
         {
-            await Task.Run(() => TryOpenClipboard());
+            TryOpenClipboard();
 
             var backup = new ClipboardBackup();
 
-            // 备份所有支持的格式
-            foreach (var format in SupportedFormats)
+            // 枚举剪贴板中所有实际存在的格式
+            uint format = 0;
+            while ((format = PInvoke.EnumClipboardFormats(format)) != 0)
             {
-                if (PInvoke.IsClipboardFormatAvailable(format))
+                var handle = PInvoke.GetClipboardData(format);
+                if (handle.IsNull)
                 {
-                    var handle = PInvoke.GetClipboardData(format);
-                    if (!handle.IsNull)
-                    {
-                        var size = PInvoke.GlobalSize(new HGLOBAL(handle.Value));
-                        if (size > 0)
-                        {
-                            unsafe
-                            {
-                                var pointer = PInvoke.GlobalLock(new HGLOBAL(handle.Value));
-                                if (pointer != null)
-                                {
-                                    try
-                                    {
-                                        var buffer = new byte[size];
-                                        Marshal.Copy((IntPtr)pointer, buffer, 0, (int)size);
-                                        backup.FormatData[format] = buffer;
-                                    }
-                                    finally
-                                    {
-                                        PInvoke.GlobalUnlock(new HGLOBAL(handle.Value));
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    // 延迟渲染的格式,跳过
+                    continue;
+                }
+
+                var size = PInvoke.GlobalSize(new HGLOBAL(handle.Value));
+                if (size == 0)
+                {
+                    // 空数据,跳过
+                    continue;
+                }
+
+                var pointer = PInvoke.GlobalLock(new HGLOBAL(handle.Value));
+                if (pointer == null)
+                {
+                    // 无法锁定,跳过
+                    continue;
+                }
+
+                try
+                {
+                    var buffer = new byte[size];
+                    Marshal.Copy((IntPtr)pointer, buffer, 0, (int)size);
+                    backup.FormatData[format] = buffer;
+                }
+                finally
+                {
+                    PInvoke.GlobalUnlock(new HGLOBAL(handle.Value));
                 }
             }
 
@@ -364,6 +370,7 @@ public class Utilities
                 TryOpenClipboard();
                 PInvoke.EmptyClipboard();
 
+                // 按照备份时的顺序恢复所有格式
                 foreach (var (format, data) in backup.FormatData)
                 {
                     RestoreClipboardFormat(format, data);
