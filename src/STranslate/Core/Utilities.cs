@@ -297,17 +297,6 @@ public class Utilities
 
     #region Clipboard Backup
 
-    private const nuint MAX_SINGLE_FORMAT_SIZE = 5 * 1024 * 1024; // 单个格式5MB限制
-    private const nuint MAX_TOTAL_BACKUP_SIZE = 10 * 1024 * 1024; // 总备份10MB限制
-
-    // 已知的位图/图像格式ID
-    private static readonly uint[] ImageFormats =
-    [
-        2,   // CF_BITMAP - 位图句柄(不能直接备份)
-        8,   // CF_DIB - 设备独立位图
-        17,  // CF_DIBV5
-        14,  // CF_PALETTE
-    ];
     /// <summary>
     /// 创建剪贴板备份
     /// </summary>
@@ -318,18 +307,11 @@ public class Utilities
             TryOpenClipboard();
 
             var backup = new ClipboardBackup();
-            nuint totalSize = 0;
 
             // 枚举剪贴板中所有实际存在的格式
             uint format = 0;
             while ((format = PInvoke.EnumClipboardFormats(format)) != 0)
             {
-                // 🔹 跳过已知的图像格式
-                if (ImageFormats.Contains(format))
-                {
-                    continue;
-                }
-
                 var handle = PInvoke.GetClipboardData(format);
                 if (handle.IsNull)
                 {
@@ -337,61 +319,29 @@ public class Utilities
                     continue;
                 }
 
-                nuint size;
-                try
+                var size = PInvoke.GlobalSize(new HGLOBAL(handle.Value));
+                if (size == 0)
                 {
-                    size = PInvoke.GlobalSize(new HGLOBAL(handle.Value));
-                }
-                catch
-                {
-                    // 🔹 某些格式可能无法获取大小,跳过
+                    // 空数据,跳过
                     continue;
                 }
 
-                if (size == 0 || size > MAX_SINGLE_FORMAT_SIZE)
+                var pointer = PInvoke.GlobalLock(new HGLOBAL(handle.Value));
+                if (pointer == null)
                 {
-                    // 空数据或超大数据,跳过
+                    // 无法锁定,跳过
                     continue;
                 }
 
-                // 🔹 检查总备份大小限制
-                if (totalSize + size > MAX_TOTAL_BACKUP_SIZE)
-                {
-                    break; // 停止备份,避免内存占用过大
-                }
-
-                void* pointer = null;
                 try
                 {
-                    pointer = PInvoke.GlobalLock(new HGLOBAL(handle.Value));
-                    if (pointer == null)
-                    {
-                        continue;
-                    }
-
                     var buffer = new byte[size];
                     Marshal.Copy((IntPtr)pointer, buffer, 0, (int)size);
                     backup.FormatData[format] = buffer;
-                    totalSize += size;
-                }
-                catch
-                {
-                    // 🔹 锁定或复制失败,跳过此格式
-                    continue;
                 }
                 finally
                 {
-                    if (pointer != null)
-                    {
-                        try
-                        {
-                            PInvoke.GlobalUnlock(new HGLOBAL(handle.Value));
-                        }
-                        catch
-                        {
-                            // 忽略解锁失败
-                        }
-                    }
+                    PInvoke.GlobalUnlock(new HGLOBAL(handle.Value));
                 }
             }
 
@@ -401,7 +351,7 @@ public class Utilities
         catch
         {
             try { PInvoke.CloseClipboard(); } catch { }
-            return default;
+            return null;
         }
     }
 
@@ -423,15 +373,7 @@ public class Utilities
                 // 按照备份时的顺序恢复所有格式
                 foreach (var (format, data) in backup.FormatData)
                 {
-                    try
-                    {
-                        RestoreClipboardFormat(format, data);
-                    }
-                    catch
-                    {
-                        // 🔹 某些格式恢复失败,继续处理其他格式
-                        continue;
-                    }
+                    RestoreClipboardFormat(format, data);
                 }
 
                 PInvoke.CloseClipboard();
