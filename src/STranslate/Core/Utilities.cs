@@ -1,6 +1,7 @@
 using Gma.System.MouseKeyHook;
 using iNKORE.UI.WPF.Modern.Controls;
 using STranslate.Plugin;
+using System.Buffers;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -244,10 +245,11 @@ public class Utilities
     /// <returns>返回当前选中的文本</returns>
     private static async Task<string?> GetSelectedTextImplAsync(int timeout = 2000)
     {
-        var clipboardBackup = CreateClipboardBackup();
-
+        ClipboardBackup? clipboardBackup = null;
         try
         {
+            clipboardBackup = CreateClipboardBackup();
+
             var originalText = GetText();
             uint originalSequence = PInvoke.GetClipboardSequenceNumber();
 
@@ -291,7 +293,7 @@ public class Utilities
         }
         finally
         {
-            await RestoreClipboardAsync(clipboardBackup);
+            RestoreClipboard(clipboardBackup);
         }
     }
 
@@ -312,6 +314,10 @@ public class Utilities
             uint format = 0;
             while ((format = PInvoke.EnumClipboardFormats(format)) != 0)
             {
+                // 仅处理可确认为 HGLOBAL 的格式
+                if (!IsHGlobalFormat(format))
+                    continue;
+
                 var handle = PInvoke.GetClipboardData(format);
                 if (handle.IsNull)
                 {
@@ -319,14 +325,25 @@ public class Utilities
                     continue;
                 }
 
-                var size = PInvoke.GlobalSize(new HGLOBAL(handle.Value));
-                if (size == 0)
+                var hglobal = new HGLOBAL(handle.Value);
+
+                var sizeN = PInvoke.GlobalSize(hglobal);
+                if (sizeN == 0)
                 {
-                    // 空数据,跳过
+                    // 空数据或获取失败,跳过
                     continue;
                 }
 
-                var pointer = PInvoke.GlobalLock(new HGLOBAL(handle.Value));
+                // 仅支持可复制到托管数组的大小
+                if (sizeN > int.MaxValue)
+                {
+                    Debug.WriteLine($"[BackupSkip] format:{format} size too large: {sizeN}");
+                    continue;
+                }
+
+                var size = (int)sizeN;
+
+                var pointer = PInvoke.GlobalLock(hglobal);
                 if (pointer == null)
                 {
                     // 无法锁定,跳过
@@ -335,13 +352,15 @@ public class Utilities
 
                 try
                 {
-                    var buffer = new byte[size];
-                    Marshal.Copy((IntPtr)pointer, buffer, 0, (int)size);
-                    backup.FormatData[format] = buffer;
+                    var buffer = ArrayPool<byte>.Shared.Rent(size);
+                    Marshal.Copy((IntPtr)pointer, buffer, 0, size);
+
+                    // 记录租用数组与有效长度
+                    backup.FormatData[format] = (buffer, size);
                 }
                 finally
                 {
-                    PInvoke.GlobalUnlock(new HGLOBAL(handle.Value));
+                    PInvoke.GlobalUnlock(hglobal);
                 }
             }
 
@@ -357,27 +376,32 @@ public class Utilities
 
     /// <summary>
     /// 恢复剪贴板内容
+    ///     * 用完即还数组，避免长时间占用 LOH
     /// </summary>
-    private static async Task RestoreClipboardAsync(ClipboardBackup? backup)
+    private static void RestoreClipboard(ClipboardBackup? backup)
     {
         if (backup?.FormatData == null || backup.FormatData.Count == 0)
             return;
 
         try
         {
-            await Task.Run(() =>
+            TryOpenClipboard();
+            PInvoke.EmptyClipboard();
+
+            // 按照备份时的顺序恢复所有格式
+            foreach (var (format, item) in backup.FormatData)
             {
-                TryOpenClipboard();
-                PInvoke.EmptyClipboard();
+                Debug.WriteLine($"format: {format}\tdatasize: {item.Length}");
+                RestoreClipboardFormat(format, item.Buffer, item.Length);
 
-                // 按照备份时的顺序恢复所有格式
-                foreach (var (format, data) in backup.FormatData)
-                {
-                    RestoreClipboardFormat(format, data);
-                }
+                // 归还该项的数组
+                ArrayPool<byte>.Shared.Return(item.Buffer, clearArray: true);
+            }
 
-                PInvoke.CloseClipboard();
-            });
+            // 清空备份表，避免悬挂引用
+            backup.FormatData.Clear();
+
+            PInvoke.CloseClipboard();
         }
         catch
         {
@@ -386,11 +410,14 @@ public class Utilities
     }
 
     /// <summary>
-    /// 恢复特定格式的剪贴板数据
+    /// 恢复特定格式
+    ///     * 从 ArrayPool 租用的数组恢复指定长度
     /// </summary>
-    private static unsafe void RestoreClipboardFormat(uint format, byte[] data)
+    private static unsafe void RestoreClipboardFormat(uint format, byte[] data, int length)
     {
-        var hGlobal = PInvoke.GlobalAlloc(GLOBAL_ALLOC_FLAGS.GMEM_MOVEABLE, (nuint)data.Length);
+        if (length <= 0) return;
+
+        var hGlobal = PInvoke.GlobalAlloc(GLOBAL_ALLOC_FLAGS.GMEM_MOVEABLE, (nuint)length);
         if (hGlobal.IsNull) return;
 
         try
@@ -400,7 +427,7 @@ public class Utilities
             {
                 try
                 {
-                    Marshal.Copy(data, 0, (IntPtr)target, data.Length);
+                    Marshal.Copy(data, 0, (IntPtr)target, length);
                 }
                 finally
                 {
@@ -419,11 +446,33 @@ public class Utilities
     }
 
     /// <summary>
-    /// 剪贴板备份数据结构
+    /// 判断剪贴板格式是否为以 HGLOBAL 承载的数据
     /// </summary>
-    private class ClipboardBackup
+    private static bool IsHGlobalFormat(uint format)
     {
-        public Dictionary<uint, byte[]> FormatData { get; } = new();
+        // 标准格式参考文档：
+        // - HGLOBAL: CF_TEXT(1), CF_SYLK(4), CF_DIF(5), CF_TIFF(6), CF_OEMTEXT(7),
+        //            CF_DIB(8), CF_PENDATA(10), CF_RIFF(11), CF_WAVE(12),
+        //            CF_UNICODETEXT(13), CF_HDROP(15), CF_LOCALE(16), CF_DIBV5(17),
+        //            CF_METAFILEPICT(3) -> HGLOBAL(结构中包含 HMETAFILE)
+        // - 非 HGLOBAL: CF_BITMAP(2)->HBITMAP, CF_PALETTE(9)->HPALETTE, CF_ENHMETAFILE(14)->HENHMETAFILE
+        // 自定义注册格式(>=0xC000)按约定通常使用 HGLOBAL 承载，这里默认视为 HGLOBAL。
+        return format switch
+        {
+            1 or 4 or 5 or 6 or 7 or 8 or 10 or 11 or 12 or 13 or 15 or 16 or 17 or 3 => true, // HGLOBAL
+            2 or 9 or 14 => false, // 非 HGLOBAL: HBITMAP/HPALETTE/HENHMETAFILE
+            _ => format >= 0xC000 // 注册的自定义格式：通常为 HGLOBAL
+        };
+    }
+
+    /// <summary>
+    /// 剪贴板备份数据结构
+    ///     * 持有租用数组
+    /// </summary>
+    private sealed class ClipboardBackup
+    {
+        // Value: (租用的数组, 有效长度)
+        public OrderedDictionary<uint, (byte[] Buffer, int Length)> FormatData { get; } = [];
     }
 
     #endregion
