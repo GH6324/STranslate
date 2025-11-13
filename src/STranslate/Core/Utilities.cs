@@ -386,12 +386,15 @@ public class Utilities
         try
         {
             TryOpenClipboard();
-            PInvoke.EmptyClipboard();
+
+            // https://learn.microsoft.com/zh-cn/windows/win32/dataxchg/clipboard-operations#clipboard-ownership
+            // EmptyClipboard 会让当前应用成为剪贴板所有者
+            //PInvoke.EmptyClipboard();
 
             // 按照备份时的顺序恢复所有格式
             foreach (var (format, item) in backup.FormatData)
             {
-                Debug.WriteLine($"format: {format}\tdatasize: {item.Length}");
+                //Debug.WriteLine($"format: {format}\tdatasize: {item.Length}");
                 RestoreClipboardFormat(format, item.Buffer, item.Length);
 
                 // 归还该项的数组
@@ -417,6 +420,39 @@ public class Utilities
     {
         if (length <= 0) return;
 
+        // 检查当前剪贴板是否已有此格式的数据
+        if (PInvoke.IsClipboardFormatAvailable(format))
+        {
+            var existingHandle = PInvoke.GetClipboardData(format);
+            if (!existingHandle.IsNull)
+            {
+                var existingSize = PInvoke.GlobalSize(new HGLOBAL(existingHandle.Value));
+                if (existingSize == (nuint)length)
+                {
+                    // 如果大小相同，检查内容是否相同
+                    var pointer = PInvoke.GlobalLock(new HGLOBAL(existingHandle.Value));
+                    if (pointer != null)
+                    {
+                        try
+                        {
+                            var existingData = new byte[length];
+                            Marshal.Copy((IntPtr)pointer, existingData, 0, length);
+
+                            if (data.AsSpan(0, length).SequenceEqual(existingData))
+                            {
+                                // 内容相同，无需恢复
+                                return;
+                            }
+                        }
+                        finally
+                        {
+                            PInvoke.GlobalUnlock(new HGLOBAL(existingHandle.Value));
+                        }
+                    }
+                }
+            }
+        }
+
         var hGlobal = PInvoke.GlobalAlloc(GLOBAL_ALLOC_FLAGS.GMEM_MOVEABLE, (nuint)length);
         if (hGlobal.IsNull) return;
 
@@ -435,8 +471,17 @@ public class Utilities
                 }
             }
 
-            PInvoke.SetClipboardData(format, new HANDLE(hGlobal.Value));
-            hGlobal = default; // 防止在finally中释放
+            var result = PInvoke.SetClipboardData(format, new HANDLE(hGlobal.Value));
+            if (result.IsNull)
+            {
+                // 设置失败，释放内存
+                PInvoke.GlobalFree(hGlobal);
+                Debug.WriteLine($"[SetClipboardDataFailed] format:{format}");
+            }
+            else
+            {
+                hGlobal = default; // 系统已接管内存
+            }
         }
         finally
         {
