@@ -5,6 +5,7 @@ using STranslate.Core;
 using STranslate.Helpers;
 using STranslate.Instances;
 using STranslate.Plugin;
+using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
@@ -87,6 +88,23 @@ public partial class PluginViewModel : ObservableObject
         _pluginCollectionView.SortDescriptions.Add(new SortDescription(propertyName, direction));
     }
 
+    private void ApplySortWithCustomComparer(ListSortDirection direction, IComparer comparer)
+    {
+        _pluginCollectionView.SortDescriptions.Clear();
+
+        if (_pluginCollectionView.View is ListCollectionView listView)
+        {
+            if (direction == ListSortDirection.Descending)
+            {
+                listView.CustomSort = new ReverseComparer(comparer);
+            }
+            else
+            {
+                listView.CustomSort = comparer;
+            }
+        }
+    }
+
     [RelayCommand]
     private void SortByName()
     {
@@ -98,7 +116,7 @@ public partial class PluginViewModel : ObservableObject
     private void SortByVersion()
     {
         VersionSortDirection = VersionSortDirection == ListSortDirection.Ascending ? ListSortDirection.Descending : ListSortDirection.Ascending;
-        ApplySort(nameof(PluginMetaData.Version), VersionSortDirection);
+        ApplySortWithCustomComparer(VersionSortDirection, new VersionComparer());
     }
 
     partial void OnPluginTypeChanged(PluginType value) => _pluginCollectionView.View?.Refresh();
@@ -265,6 +283,79 @@ public partial class PluginViewModel : ObservableObject
     [RelayCommand]
     private void OpenOfficialLink(string url)
         => Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
+}
+
+/// <summary>
+/// 版本号比较器，支持语义化版本排序
+///     * 1.0.0
+///     * 2.1.3.4
+///     * 1.0.0-beta
+///     * 1.2
+///     * v1.0.0（会自动清理非数字字符）
+/// </summary>
+public class VersionComparer : IComparer
+{
+    public int Compare(object? x, object? y)
+    {
+        if (x is not PluginMetaData pluginX || y is not PluginMetaData pluginY)
+            return 0;
+
+        return CompareVersions(pluginX.Version, pluginY.Version);
+    }
+
+    private static int CompareVersions(string version1, string version2)
+    {
+        if (string.IsNullOrEmpty(version1) && string.IsNullOrEmpty(version2)) return 0;
+        if (string.IsNullOrEmpty(version1)) return -1;
+        if (string.IsNullOrEmpty(version2)) return 1;
+
+        // 尝试解析为 System.Version
+        if (Version.TryParse(version1, out var v1) && Version.TryParse(version2, out var v2))
+        {
+            return v1.CompareTo(v2);
+        }
+
+        // 手动解析版本号（支持更灵活的格式）
+        var parts1 = ParseVersionParts(version1);
+        var parts2 = ParseVersionParts(version2);
+
+        int maxLength = Math.Max(parts1.Length, parts2.Length);
+        for (int i = 0; i < maxLength; i++)
+        {
+            int part1 = i < parts1.Length ? parts1[i] : 0;
+            int part2 = i < parts2.Length ? parts2[i] : 0;
+
+            int result = part1.CompareTo(part2);
+            if (result != 0) return result;
+        }
+
+        return 0;
+    }
+
+    private static int[] ParseVersionParts(string version)
+    {
+        // 移除非数字字符，只保留数字和点
+        var cleanVersion = new string(version.Where(c => char.IsDigit(c) || c == '.').ToArray());
+
+        return cleanVersion.Split('.', StringSplitOptions.RemoveEmptyEntries)
+            .Select(part => int.TryParse(part, out var num) ? num : 0)
+            .ToArray();
+    }
+}
+
+/// <summary>
+/// 反向比较器包装器
+/// </summary>
+public class ReverseComparer : IComparer
+{
+    private readonly IComparer _innerComparer;
+
+    public ReverseComparer(IComparer innerComparer)
+    {
+        _innerComparer = innerComparer;
+    }
+
+    public int Compare(object? x, object? y) => _innerComparer.Compare(y, x);
 }
 
 public enum PluginType
