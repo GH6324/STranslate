@@ -7,21 +7,8 @@ using STranslate.Plugin;
 
 namespace STranslate.Converters;
 
-public class DictionaryResultTypeVisibilityConverter : MarkupExtension, IValueConverter
+public class DictionaryResultTypeVisibilityConverter : EnumToVisibilityConverter<DictionaryResultType>
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        if (value is not DictionaryResultType currentType || parameter is not string targetTypeStr)
-            return Visibility.Collapsed;
-        if (!Enum.TryParse<DictionaryResultType>(targetTypeStr, out var targetTypeEnum))
-            return Visibility.Collapsed;
-        return currentType == targetTypeEnum ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        => Binding.DoNothing;
-
-    public override object ProvideValue(IServiceProvider serviceProvider) => this;
 }
 
 public class DictionaryResultSuccessErrorBoolConverter : MarkupExtension, IValueConverter
