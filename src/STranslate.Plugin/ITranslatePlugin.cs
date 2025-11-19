@@ -249,22 +249,22 @@ public partial class TranslateResult : ObservableObject
     /// <summary>
     /// 源语言代码。
     /// </summary>
-    [ObservableProperty] public partial string SourceLang { get; internal set; } = string.Empty;
+    [ObservableProperty] public partial string SourceLang { get; set; } = string.Empty;
 
     /// <summary>
     /// 目标语言代码。
     /// </summary>
-    [ObservableProperty] public partial string TargetLang { get; internal set; } = string.Empty;
+    [ObservableProperty] public partial string TargetLang { get; set; } = string.Empty;
 
     /// <summary>
     /// 翻译耗时。
     /// </summary>
-    [ObservableProperty] public partial TimeSpan Duration { get; internal set; } = TimeSpan.Zero;
+    [ObservableProperty] public partial TimeSpan Duration { get; set; } = TimeSpan.Zero;
 
     /// <summary>
     /// 是否正在翻译
     /// </summary>
-    [ObservableProperty] public partial bool IsProcessing { get; internal set; } = false;
+    [ObservableProperty] public partial bool IsProcessing { get; set; } = false;
 }
 
 /// <summary>
@@ -376,12 +376,12 @@ public partial class DictionaryResult : ObservableObject
     /// <summary>
     /// 翻译耗时
     /// </summary>
-    [ObservableProperty] public partial TimeSpan Duration { get; internal set; } = TimeSpan.Zero;
+    [ObservableProperty] public partial TimeSpan Duration { get; set; } = TimeSpan.Zero;
 
     /// <summary>
     /// 是否正在翻译
     /// </summary>
-    [ObservableProperty] public partial bool IsProcessing { get; internal set; } = false;
+    [ObservableProperty] public partial bool IsProcessing { get; set; } = false;
 }
 
 /// <summary>

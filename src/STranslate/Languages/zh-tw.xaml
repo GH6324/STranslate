@@ -240,6 +240,7 @@
     <sys:String x:Key="RemoveLineBreak">移除換行</sys:String>
     <sys:String x:Key="RemoveSpace">移除空格</sys:String>
     <sys:String x:Key="UseSettingLang">識別失敗</sys:String>
+    <sys:String x:Key="IdentifiedCache">緩存</sys:String>
 
     <!--  // Output Control Context Menu //  -->
     <sys:String x:Key="ExecuteTranslation">執行翻譯</sys:String>
@@ -248,6 +249,9 @@
     <sys:String x:Key="CloseService">關閉服務</sys:String>
     <sys:String x:Key="Paraphrase">釋義</sys:String>
     <sys:String x:Key="Expand">擴展</sys:String>
+
+    <sys:String x:Key="TranslateCancel">翻譯取消</sys:String>
+    <sys:String x:Key="TranslateFail">翻譯失敗</sys:String>
 
     <!--  // Prompt //  -->
     <sys:String x:Key="NewPrompt">新提示詞</sys:String>

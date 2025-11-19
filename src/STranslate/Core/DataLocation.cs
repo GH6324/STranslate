@@ -23,6 +23,8 @@ public class DataLocation
     public static readonly string PluginCacheDirectory = Path.Combine(DataDirectory(), Constant.Cache, Constant.Plugins);
     public static readonly string PluginsDirectory = Path.Combine(DataDirectory(), Constant.Plugins);
 
+    public static readonly string DbConnectionString = $"Data Source={CacheDirectory}\\history.db";
+
     /// <summary>
     ///     Plugin搜索目录
     /// </summary>

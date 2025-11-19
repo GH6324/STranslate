@@ -135,8 +135,8 @@ public partial class App : ISingleInstanceApp, INavigation, IDisposable
                     services.AddScopedFromNamespace("STranslate.ViewModels.Pages", Assembly.GetExecutingAssembly());
                     services.AddScopedFromNamespace("STranslate.Views.Pages", Assembly.GetExecutingAssembly());
 
-                    // 注册外部调用服务
                     services.AddSingleton<ExternalCallService>();
+                    services.AddSingleton<SqlService>();
                 })
                 .Build();
             Ioc.Default.ConfigureServices(host.Services);
@@ -197,6 +197,7 @@ public partial class App : ISingleInstanceApp, INavigation, IDisposable
         _pluginManager = Ioc.Default.GetRequiredService<PluginManager>();
         _pluginManager.LoadPlugins();
         Ioc.Default.GetRequiredService<ServiceManager>().LoadServices();
+        Ioc.Default.GetRequiredService<SqlService>().InitializeDB();
 
         RegisterAppDomainExceptions();
         RegisterDispatcherUnhandledException();

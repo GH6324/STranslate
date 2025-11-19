@@ -11,6 +11,8 @@ using STranslate.Resources;
 using STranslate.ViewModels.Pages;
 using STranslate.Views;
 using STranslate.Views.Pages;
+using System.Text.Json;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -35,6 +37,9 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     public OcrInstance OcrInstance { get; }
     public TtsInstance TtsInstance { get; }
     public VocabularyInstance VocabularyInstance { get; }
+
+    private readonly SqlService _sqlService;
+
     public Settings Settings { get; }
     public HotkeySettings HotkeySettings { get; }
 
@@ -50,6 +55,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         OcrInstance ocrInstance,
         TtsInstance ttsInstance,
         VocabularyInstance vocabularyInstance,
+        SqlService sqlService,
         Settings settings,
         HotkeySettings hotkeySettings)
     {
@@ -64,6 +70,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         OcrInstance = ocrInstance;
         TtsInstance = ttsInstance;
         VocabularyInstance = vocabularyInstance;
+        _sqlService = sqlService;
         Settings = settings;
         HotkeySettings = hotkeySettings;
 
@@ -132,30 +139,111 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [RelayCommand(IncludeCancelCommand = true, CanExecute = nameof(CanTranslate))]
     private async Task TranslateAsync(string? force, CancellationToken cancellationToken)
     {
-        var enabledPlugins = TranslateInstance.Services.Where(x => x.IsEnabled).Select(x => x.Plugin).ToList();
-        if (enabledPlugins.Count == 0)
+        var enabledSvcs = TranslateInstance.Services.Where(x => x.IsEnabled).ToList();
+        if (enabledSvcs.Count == 0)
             return;
 
-        ResetAllPlugins(enabledPlugins);
+        ResetAllPlugins(enabledSvcs.Select(x => x.Plugin));
 
         IdentifiedLanguage = string.Empty;
 
-        var (_, source, target) = await LanguageDetector.GetLanguageAsync(InputText, cancellationToken, StartProcess, CompleteProcess, FinishProcess);
-
-        var maxConcurrency = Math.Min(enabledPlugins.Count, Environment.ProcessorCount * 10);
-        using var semaphore = new SemaphoreSlim(maxConcurrency, maxConcurrency);
-
-        var translateTasks = enabledPlugins.Select(plugin =>
-            ExecutePluginTranslationAsync(plugin, source, target, semaphore, cancellationToken));
-
-        try
+        async Task ProcessAsync()
         {
-            await Task.WhenAll(translateTasks).ConfigureAwait(false);
+            var (_, source, target) = await LanguageDetector.GetLanguageAsync(InputText, cancellationToken, StartProcess, CompleteProcess, FinishProcess);
+
+            var maxConcurrency = Math.Min(enabledSvcs.Count, Environment.ProcessorCount * 10);
+            using var semaphore = new SemaphoreSlim(maxConcurrency, maxConcurrency);
+
+            var history = new HistoryModel
+            {
+                Time = DateTime.Now,
+                SourceText = InputText,
+                SourceLang = Settings.SourceLang.ToString(),
+                TargetLang = Settings.TargetLang.ToString(),
+                Data = [.. enabledSvcs.Select(svc => new HistoryData
+                {
+                    PluginID = svc.MetaData.PluginID,
+                    ServiceID = svc.ServiceID,
+                    Text = string.Empty,
+                    BackText = string.Empty
+                })]
+            };
+            var translateTasks = enabledSvcs.Select(svc =>
+                ExecutePluginTranslationAsync(svc, source, target, semaphore, history, cancellationToken));
+
+            try
+            {
+                await Task.WhenAll(translateTasks).ConfigureAwait(false);
+                await _sqlService.InsertDataAsync(history, 100).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                // Ignore cancellation here as it's handled in ExecutePluginTranslationAsync
+            }
         }
-        catch (OperationCanceledException)
+
+        // 尝试获取缓存
+        if (force != null)
         {
-            // Ignore cancellation here as it's handled in ExecutePluginTranslationAsync
+            await ProcessAsync();
+            return;
         }
+
+        var cache = await _sqlService.GetDataAsync(InputText, Settings.SourceLang.ToString(), Settings.TargetLang.ToString());
+        if (cache == null)
+        {
+            await ProcessAsync();
+            return;
+        }
+
+        IdentifiedLanguage = _i18n.GetTranslation("IdentifiedCache");
+
+        await Parallel.ForEachAsync(enabledSvcs, cancellationToken, async (svc, _) =>
+        {
+            if (cache.Data.FirstOrDefault(x => x.PluginID == svc.MetaData.PluginID && x.ServiceID == svc.ServiceID) is not HistoryData data)
+                return;
+            if (svc.Plugin is ITranslatePlugin tPlugin)
+            {
+                var result = JsonSerializer.Deserialize<TranslateResult>(data.Text, HistoryModel.JsonOption);
+                if (result == null) return;
+                tPlugin.TransResult.Text = result.Text;
+                tPlugin.TransResult.IsSuccess = result.IsSuccess;
+                tPlugin.TransResult.SourceLang = result.SourceLang;
+                tPlugin.TransResult.TargetLang = result.TargetLang;
+                //tPlugin.TransResult.Duration = result.Duration;
+
+                // transBack
+                if (tPlugin.AutoTransBack && JsonSerializer.Deserialize<TranslateResult>(data.BackText, HistoryModel.JsonOption) is TranslateResult result1)
+                {
+                    tPlugin.TransBackResult.Text = result1.Text;
+                    tPlugin.TransBackResult.IsSuccess = result1.IsSuccess;
+                    tPlugin.TransBackResult.SourceLang = result1.SourceLang;
+                    tPlugin.TransBackResult.TargetLang = result1.TargetLang;
+                    //tPlugin.TransBackResult.Duration = result1.Duration;
+                }
+            }
+            else if (svc.Plugin is IDictionaryPlugin dPlugin)
+            {
+                var result = JsonSerializer.Deserialize<DictionaryResult>(data.Text, HistoryModel.JsonOption);
+                if (result == null) return;
+                dPlugin.DictionaryResult.Text = result.Text;
+                dPlugin.DictionaryResult.ResultType = result.ResultType;
+                //dPlugin.DictionaryResult.Duration = result.Duration;
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    result.Symbols.ToList().ForEach(dPlugin.DictionaryResult.Symbols.Add);
+                    result.DictMeans.ToList().ForEach(dPlugin.DictionaryResult.DictMeans.Add);
+                    result.Plurals.ToList().ForEach(dPlugin.DictionaryResult.Plurals.Add);
+                    result.PastTense.ToList().ForEach(dPlugin.DictionaryResult.PastTense.Add);
+                    result.PastParticiple.ToList().ForEach(dPlugin.DictionaryResult.PastParticiple.Add);
+                    result.PresentParticiple.ToList().ForEach(dPlugin.DictionaryResult.PresentParticiple.Add);
+                    result.ThirdPersonSingular.ToList().ForEach(dPlugin.DictionaryResult.ThirdPersonSingular.Add);
+                    result.Comparative.ToList().ForEach(dPlugin.DictionaryResult.Comparative.Add);
+                    result.Superlative.ToList().ForEach(dPlugin.DictionaryResult.Superlative.Add);
+                    result.Sentences.ToList().ForEach(dPlugin.DictionaryResult.Sentences.Add);
+                });
+            }
+        });
     }
 
     [RelayCommand(IncludeCancelCommand = true, CanExecute = nameof(CanTranslate))]
@@ -708,23 +796,26 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     #region Plugin Execution Logic
 
-    private async Task ExecutePluginTranslationAsync(IPlugin plugin, LangEnum source, LangEnum target,
-        SemaphoreSlim semaphore, CancellationToken cancellationToken)
+    private async Task ExecutePluginTranslationAsync(Service svc, LangEnum source, LangEnum target,
+        SemaphoreSlim semaphore, HistoryModel history, CancellationToken cancellationToken)
     {
         await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            if (plugin is ITranslatePlugin tPlugin)
+            if (svc.Plugin is ITranslatePlugin tPlugin)
             {
-                await ExecuteAsync(tPlugin, source, target, cancellationToken).ConfigureAwait(false);
+                var result = await ExecuteAsync(tPlugin, source, target, cancellationToken).ConfigureAwait(false);
+                history.GetData(svc)?.Text = JsonSerializer.Serialize(result, HistoryModel.JsonOption);
                 if (tPlugin.TransResult.IsSuccess && tPlugin.AutoTransBack)
                 {
-                    await ExecuteBackAsync(tPlugin, target, source, cancellationToken).ConfigureAwait(false);
+                    var backResult = await ExecuteBackAsync(tPlugin, target, source, cancellationToken).ConfigureAwait(false);
+                    history.GetData(svc)?.BackText = JsonSerializer.Serialize(backResult, HistoryModel.JsonOption);
                 }
             }
-            else if (plugin is IDictionaryPlugin dPlugin)
+            else if (svc.Plugin is IDictionaryPlugin dPlugin)
             {
-                await ExecuteDictAsync(dPlugin, cancellationToken).ConfigureAwait(false);
+                var result = await ExecuteDictAsync(dPlugin, cancellationToken).ConfigureAwait(false);
+                history.GetData(svc)?.Text = JsonSerializer.Serialize(result, HistoryModel.JsonOption);
             }
         }
         finally
@@ -733,7 +824,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         }
     }
 
-    private async Task ExecuteDictAsync(IDictionaryPlugin plugin, CancellationToken cancellationToken)
+    private async Task<DictionaryResult> ExecuteDictAsync(IDictionaryPlugin plugin, CancellationToken cancellationToken)
     {
         var startTime = DateTime.Now;
         try
@@ -745,12 +836,12 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         catch (OperationCanceledException)
         {
             plugin.DictionaryResult.ResultType = DictionaryResultType.Error;
-            plugin.DictionaryResult.Text = "翻译取消";
+            plugin.DictionaryResult.Text = _i18n.GetTranslation("TranslateCancel");
         }
         catch (Exception ex)
         {
             plugin.DictionaryResult.ResultType = DictionaryResultType.Error;
-            plugin.DictionaryResult.Text = $"翻译失败: {ex.Message}";
+            plugin.DictionaryResult.Text = $"{_i18n.GetTranslation("TranslateFail")}: {ex.Message}";
         }
         finally
         {
@@ -759,9 +850,11 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             if (plugin.DictionaryResult.IsProcessing)
                 plugin.DictionaryResult.IsProcessing = false;
         }
+
+        return plugin.DictionaryResult;
     }
 
-    private async Task ExecuteAsync(ITranslatePlugin plugin, LangEnum source, LangEnum target, CancellationToken cancellationToken)
+    private async Task<TranslateResult> ExecuteAsync(ITranslatePlugin plugin, LangEnum source, LangEnum target, CancellationToken cancellationToken)
     {
         var startTime = DateTime.Now;
         try
@@ -775,12 +868,12 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         catch (OperationCanceledException)
         {
             plugin.TransResult.IsSuccess = false;
-            plugin.TransResult.Text = "翻译取消";
+            plugin.TransResult.Text = _i18n.GetTranslation("TranslateCancel");
         }
         catch (Exception ex)
         {
             plugin.TransResult.IsSuccess = false;
-            plugin.TransResult.Text = $"翻译失败: {ex.Message}";
+            plugin.TransResult.Text = $"{_i18n.GetTranslation("TranslateFail")}: {ex.Message}";
         }
         finally
         {
@@ -788,9 +881,11 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             if (plugin.TransResult.IsProcessing)
                 plugin.TransResult.IsProcessing = false;
         }
+
+        return plugin.TransResult;
     }
 
-    private async Task ExecuteBackAsync(ITranslatePlugin plugin, LangEnum target, LangEnum source, CancellationToken cancellationToken)
+    private async Task<TranslateResult> ExecuteBackAsync(ITranslatePlugin plugin, LangEnum target, LangEnum source, CancellationToken cancellationToken)
     {
         var startTime = DateTime.Now;
         try
@@ -817,6 +912,8 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             if (plugin.TransBackResult.IsProcessing)
                 plugin.TransBackResult.IsProcessing = false;
         }
+
+        return plugin.TransBackResult;
     }
 
     #endregion
@@ -1050,7 +1147,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         MainWindow.PART_Input.SetCaretIndex(InputText.Length);
     }
 
-    private void ResetAllPlugins(List<IPlugin> plugins)
+    private void ResetAllPlugins(IEnumerable<IPlugin> plugins)
     {
         foreach (var plugin in plugins)
         {

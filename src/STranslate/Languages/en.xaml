@@ -240,6 +240,7 @@
     <sys:String x:Key="RemoveLineBreak">Remove Line Break</sys:String>
     <sys:String x:Key="RemoveSpace">Remove Space</sys:String>
     <sys:String x:Key="UseSettingLang">DetectFailed</sys:String>
+    <sys:String x:Key="IdentifiedCache">Cache</sys:String>
 
     <!--  // Output Control Context Menu //  -->
     <sys:String x:Key="ExecuteTranslation">Execute Translation</sys:String>
@@ -248,6 +249,9 @@
     <sys:String x:Key="CloseService">Close Service</sys:String>
     <sys:String x:Key="Paraphrase">Definition</sys:String>
     <sys:String x:Key="Expand">Expand</sys:String>
+
+    <sys:String x:Key="TranslateCancel">Translate canceled</sys:String>
+    <sys:String x:Key="TranslateFail">Translate failed</sys:String>
 
     <!--  // Prompt //  -->
     <sys:String x:Key="NewPrompt">New Prompt</sys:String>

@@ -79,10 +79,12 @@
 
     <ItemGroup>
         <PackageReference Include="ChefKeys" />
+        <PackageReference Include="Dapper.Contrib" />
         <PackageReference Include="gong-wpf-dragdrop" />
         <PackageReference Include="H.InputSimulator" />
         <PackageReference Include="Hardcodet.NotifyIcon.Wpf" />
         <PackageReference Include="Markdig.Wpf" />
+        <PackageReference Include="Microsoft.Data.Sqlite" />
         <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" />
         <PackageReference Include="MouseKeyHook" />
         <PackageReference Include="NAudio" />
