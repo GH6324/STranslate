@@ -1,8 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
 using STranslate.Core;
 using STranslate.Plugin;
-using STranslate.Views;
 using System.Collections.ObjectModel;
 using System.Windows.Controls;
 
@@ -15,6 +15,7 @@ public partial class HistoryViewModel : ObservableObject
 
     private readonly SqlService _sqlService;
     private readonly ISnackbar _snackbar;
+    private readonly Internationalization _i18n;
     private readonly Timer _searchTimer;
 
     private CancellationTokenSource? _searchCts;
@@ -35,12 +36,16 @@ public partial class HistoryViewModel : ObservableObject
 
     [ObservableProperty] public partial long TotalCount { get; set; }
 
-    [ObservableProperty] public partial Control? HistoryContent { get; set; }
+    [ObservableProperty] public partial HistoryModel? HistoryContent { get; set; }
 
-    public HistoryViewModel(SqlService sqlService, ISnackbar snackbar)
+    public HistoryViewModel(
+        SqlService sqlService,
+        ISnackbar snackbar,
+        Internationalization i18n)
     {
         _sqlService = sqlService;
         _snackbar = snackbar;
+        _i18n = i18n;
         _searchTimer = new Timer(async _ => await SearchAsync(), null, Timeout.Infinite, Timeout.Infinite);
 
         _ = RefreshAsync();
@@ -75,8 +80,7 @@ public partial class HistoryViewModel : ObservableObject
             HistoryContent = null;
             return;
         }
-        var detailView = new HistoryDetailControl(value);
-        HistoryContent = detailView;
+        HistoryContent = value;
     }
 
     [RelayCommand]
@@ -91,21 +95,26 @@ public partial class HistoryViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void Delete()
+    private void Delete(HistoryModel? historyModel)
     {
-        if (SelectedItem == null)
+        if (historyModel == null)
         {
             _snackbar.ShowWarning($"未选中任何历史记录项");
             return;
         }
 
-        _sqlService.DeleteData(SelectedItem);
+        _sqlService.DeleteData(historyModel);
 
-        UpdateRemove(SelectedItem);
+        App.Current.Dispatcher.Invoke(() => HistoryItems.Remove(historyModel));
     }
 
-    public void UpdateRemove(HistoryModel model) =>
-        App.Current.Dispatcher.Invoke(() => HistoryItems.Remove(model));
+    [RelayCommand]
+    private void Copy(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return;
+        Utilities.SetText(text);
+        _snackbar.ShowSuccess(_i18n.GetTranslation("CopySuccess"));
+    }
 
     [RelayCommand]
     private async Task LoadMoreAsync()

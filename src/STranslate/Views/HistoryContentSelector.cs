@@ -6,7 +6,7 @@ using System.Windows.Controls;
 
 namespace STranslate.Views;
 
-public class HistoryDetailSelector : DataTemplateSelector
+public class HistoryContentSelector : DataTemplateSelector
 {
     public DataTemplate? DictionaryTemplate { get; set; }
 
