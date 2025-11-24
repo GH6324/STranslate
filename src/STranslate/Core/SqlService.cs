@@ -482,8 +482,7 @@ public class HistoryModel
                 d.ServiceID == svc.ServiceID &&
                 d.DictResult != null &&
                 d.DictResult.ResultType != DictionaryResultType.None &&
-                d.DictResult.ResultType != DictionaryResultType.Error &&
-                !string.IsNullOrWhiteSpace(d.DictResult?.Text)
+                d.DictResult.ResultType != DictionaryResultType.Error
             );
     }
 
