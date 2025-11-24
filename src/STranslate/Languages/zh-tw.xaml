@@ -49,6 +49,8 @@
     <sys:String x:Key="General_SecondLanguageDescription">當目標語言設為自動且來源語言為第一語言時，目標語言使用第二語言。</sys:String>
     <sys:String x:Key="General_HttpTimeout">逾時時間</sys:String>
     <sys:String x:Key="General_HttpTimeoutDescription">網路請求的逾時時間，單位：秒。</sys:String>
+    <sys:String x:Key="General_PreserveClipboard">保護剪貼簿</sys:String>
+    <sys:String x:Key="General_PreserveClipboardDescription">取詞時避免污染剪貼簿</sys:String>
     <sys:String x:Key="General_TranslateOnPaste">貼上立即翻譯</sys:String>
     <sys:String x:Key="General_TranslateOnPasteDescription">輸入框內貼上文字立即執行翻譯。</sys:String>
     <sys:String x:Key="General_LineBreakHandleType">取詞換行處理</sys:String>

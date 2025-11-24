@@ -49,6 +49,8 @@
     <sys:String x:Key="General_SecondLanguageDescription">When the target language is set to Auto and the source language is the first language, the target language will use the second language.</sys:String>
     <sys:String x:Key="General_HttpTimeout">Timeout</sys:String>
     <sys:String x:Key="General_HttpTimeoutDescription">Network request timeout in seconds.</sys:String>
+    <sys:String x:Key="General_PreserveClipboard">Preserve Clipboard</sys:String>
+    <sys:String x:Key="General_PreserveClipboardDescription">Avoid contaminating clipboard when capturing words</sys:String>
     <sys:String x:Key="General_TranslateOnPaste">Translate on Paste</sys:String>
     <sys:String x:Key="General_TranslateOnPasteDescription">Execute translation immediately when text is pasted into the input box.</sys:String>
     <sys:String x:Key="General_LineBreakHandleType">Line Break Handling</sys:String>

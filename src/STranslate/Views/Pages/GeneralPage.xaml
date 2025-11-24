@@ -188,6 +188,27 @@
                     </ui:SettingsExpander.Items>
                 </ui:SettingsExpander>
 
+                <ui:SettingsCard Header="{DynamicResource General_HistoryCount}">
+                    <ui:SettingsCard.HeaderIcon>
+                        <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.History_20_Regular}" />
+                    </ui:SettingsCard.HeaderIcon>
+                    <ComboBox
+                        DisplayMemberPath="Display"
+                        ItemsSource="{Binding DataProvider.HistoryLimits}"
+                        SelectedValue="{Binding Settings.HistoryLimit}"
+                        SelectedValuePath="Value" />
+                </ui:SettingsCard>
+
+                <ui:SettingsCard Description="{DynamicResource General_PreserveClipboardDescription}" Header="{DynamicResource General_PreserveClipboard}">
+                    <ui:SettingsCard.HeaderIcon>
+                        <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.ClipboardTask_20_Regular}" />
+                    </ui:SettingsCard.HeaderIcon>
+                    <ui:ToggleSwitch
+                        IsOn="{Binding Settings.PreserveClipboard}"
+                        OffContent="{DynamicResource Disable}"
+                        OnContent="{DynamicResource Enable}" />
+                </ui:SettingsCard>
+
                 <ui:SettingsCard Description="{DynamicResource General_TranslateOnPasteDescription}" Header="{DynamicResource General_TranslateOnPaste}">
                     <ui:SettingsCard.HeaderIcon>
                         <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.ClipboardArrowRight_20_Regular}" />

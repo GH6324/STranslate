@@ -31,6 +31,8 @@ public partial class Settings : ObservableObject
 
     [ObservableProperty] public partial bool IgnoreHotkeysOnFullscreen { get; set; } = false;
 
+    [ObservableProperty] public partial bool PreserveClipboard { get; set; } = false;
+
     [ObservableProperty] public partial ElementTheme ColorScheme { get; set; }
 
     [ObservableProperty] public partial bool IsColorSchemeVisible { get; set; } = true;

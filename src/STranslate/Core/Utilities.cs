@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.DependencyInjection;
 using Gma.System.MouseKeyHook;
 using iNKORE.UI.WPF.Modern.Controls;
 using STranslate.Plugin;
@@ -230,7 +231,9 @@ public class Utilities
 
         try
         {
-            return await GetSelectedTextImplAsync(timeout);
+            return Ioc.Default.GetRequiredService<Settings>().PreserveClipboard ?
+                await GetSelectedTextImplPreserveClipboardAsync(timeout) :
+                await GetSelectedTextImplAsync(timeout);
         }
         catch (OperationCanceledException)
         {
@@ -244,6 +247,53 @@ public class Utilities
     /// <param name="timeout">超时时间（毫秒）</param>
     /// <returns>返回当前选中的文本</returns>
     private static async Task<string?> GetSelectedTextImplAsync(int timeout = 2000)
+    {
+        var originalText = GetText();
+        uint originalSequence = PInvoke.GetClipboardSequenceNumber();
+
+        // 发送复制命令
+        SendCtrlCV();
+
+        var startTime = Environment.TickCount;
+        var hasSequenceChanged = false;
+
+        while (Environment.TickCount - startTime < timeout)
+        {
+            uint currentSequence = PInvoke.GetClipboardSequenceNumber();
+
+            // 检查序列号是否变化
+            if (currentSequence != originalSequence)
+            {
+                hasSequenceChanged = true;
+                // 序列号变化后，等待一段时间确保内容完全更新
+                await Task.Delay(30);
+                break;
+            }
+
+            await Task.Delay(10);
+        }
+
+        var currentText = GetText();
+
+        // 如果序列号变化了，或者内容发生了变化，或者原本就没有内容
+        if (hasSequenceChanged ||
+            currentText != originalText ||
+            string.IsNullOrEmpty(originalText))
+        {
+            return currentText?.Trim();
+        }
+
+        return null; // 没有检测到变化
+    }
+
+    /// <summary>
+    ///     获取选中文本实现
+    ///     * 无污染剪贴板
+    ///     * 可能会造成内存占用持续增大
+    /// </summary>
+    /// <param name="timeout">超时时间（毫秒）</param>
+    /// <returns>返回当前选中的文本</returns>
+    private static async Task<string?> GetSelectedTextImplPreserveClipboardAsync(int timeout = 2000)
     {
         ClipboardBackup? clipboardBackup = null;
         try

@@ -49,6 +49,8 @@
     <sys:String x:Key="General_SecondLanguageDescription">当目标语言设为自动且源语言为第一语言时目标语言使用第二语言。</sys:String>
     <sys:String x:Key="General_HttpTimeout">超时时间</sys:String>
     <sys:String x:Key="General_HttpTimeoutDescription">请求网络请求的超时时间，单位：秒。</sys:String>
+    <sys:String x:Key="General_PreserveClipboard">保护剪贴板</sys:String>
+    <sys:String x:Key="General_PreserveClipboardDescription">取词时避免污染剪贴板</sys:String>
     <sys:String x:Key="General_TranslateOnPaste">粘贴立即翻译</sys:String>
     <sys:String x:Key="General_TranslateOnPasteDescription">输入框内粘贴文本立即执行翻译。</sys:String>
     <sys:String x:Key="General_LineBreakHandleType">取词换行处理</sys:String>
