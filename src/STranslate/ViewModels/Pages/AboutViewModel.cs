@@ -1,12 +1,19 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using iNKORE.UI.WPF.Modern.Controls;
 using Microsoft.Extensions.Logging;
+using Microsoft.Toolkit.Uwp.Notifications;
 using Microsoft.Win32;
+using STranslate.Controls;
 using STranslate.Core;
 using STranslate.Plugin;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Web;
+using System.Windows;
 using WebDav;
 
 namespace STranslate.ViewModels.Pages;
@@ -211,8 +218,48 @@ public partial class AboutViewModel(
 
     private async Task PreWebDavRestoreAsync()
     {
+        var result = await CreateClientAsync();
+        if (!result.isSucess)
+        {
+            snackbar.Show("请检查配置或查看日志");
+            logger.LogError($"Restore|CreateClientAsync|Failed Message: {result.message}");
+            return;
+        }
 
+        var client = result.client;
+        var absolutePath = result.message;
+
+        try
+        {
+            //检查该路径是否存在
+            var ret = await client.Propfind(absolutePath);
+            if (!ret.IsSuccessful)
+                //不存在则创建目录
+                await client.Mkcol(absolutePath);
+            else
+                //添加结果到viewmodel
+                foreach (var res in ret.Resources)
+                {
+                    if (res.IsCollection || res.Uri == null || !res.Uri.Contains(Constant.AppName, StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    //html解码以显示中文
+                    var decodeFullName = HttpUtility.UrlDecode(res.Uri).Replace(absolutePath, "").Trim('/');
+                    _collections.Add(new WebDavResult(decodeFullName));
+                }
+
+            var contentDialog = new WebDavContentDialog(client, absolutePath, _collections);
+            if (await contentDialog.ShowAsync() == ContentDialogResult.Primary)
+            {
+
+            }
+
+            _collections.Clear();
+        }
+        catch { }
     }
+
+    private ObservableCollection<WebDavResult> _collections = [];
 
     /// <summary>
     ///     创建WebDavClient
@@ -251,4 +298,25 @@ public partial class AboutViewModel(
     }
 
     #endregion
+}
+
+public partial class WebDavResult : ObservableObject
+{
+    [ObservableProperty]
+    public partial string FullName { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial bool IsEdit { get; set; }
+
+    [ObservableProperty]
+    public partial string Name { get; set; } = string.Empty;
+
+    public WebDavResult() { }
+
+    public WebDavResult(string fullName, bool isEdit = false)
+    {
+        FullName = fullName;
+        Name = FullName.Replace(".zip", "");
+        IsEdit = isEdit;
+    }
 }
