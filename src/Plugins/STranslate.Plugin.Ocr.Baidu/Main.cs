@@ -97,19 +97,20 @@ public class Main : ObservableObject, IOcrPlugin
             {
                 { "Content-Type", "application/x-www-form-urlencoded" },
                 { "Accept", "application/json" }
-            },
-            QueryParams = new Dictionary<string, string>
-            {
-                { "image", base64Str },
-                { "language_type", target },
-                { "detect_direction", "false" },
-                { "detect_language", "false" },
-                { "vertexes_location", "false" },
-                { "paragraph", "false" },
-                { "probability", "false" }
             }
         };
-        var response = await Context.HttpService.PostAsync(url, string.Empty, options, cancellationToken);
+        var formData = new Dictionary<string, string>
+        {
+            { "image", base64Str },
+            { "language_type", target },
+            { "detect_direction", "false" },
+            { "detect_language", "false" },
+            { "vertexes_location", "false" },
+            { "paragraph", "false" },
+            { "probability", "false" }
+        };
+
+        var response = await Context.HttpService.PostAsync(url, formData.ToFormUrlEncodedContent(), options, cancellationToken);
         var parsedData = JsonSerializer.Deserialize<Root>(response) ?? throw new Exception("Parse ocr result failed");
 
         // 判断是否出错
