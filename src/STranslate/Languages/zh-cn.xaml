@@ -317,7 +317,7 @@
 
     <!--  // Output Control //  -->
     <sys:String x:Key="CopyAsPascalCase">复制成大驼峰</sys:String>
-    <sys:String x:Key="CopyAsCamelCase">复制成大驼峰</sys:String>
+    <sys:String x:Key="CopyAsCamelCase">复制成小驼峰</sys:String>
     <sys:String x:Key="CopyAsSnakeCase">复制成蛇形</sys:String>
     <sys:String x:Key="InsertText">插入文本</sys:String>
     <sys:String x:Key="BackTranslation">回译</sys:String>
