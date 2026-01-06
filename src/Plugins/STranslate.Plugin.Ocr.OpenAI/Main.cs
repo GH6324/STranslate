@@ -63,10 +63,7 @@ public class Main : ObservableObject, IOcrPlugin, ILlm
 
     public async Task<OcrResult> RecognizeAsync(OcrRequest request, CancellationToken cancellationToken)
     {
-        UriBuilder uriBuilder = new(Settings.Url);
-        // 如果路径不是有效的API路径结尾，使用默认路径
-        if (uriBuilder.Path == "/")
-            uriBuilder.Path = "/v1/chat/completions";
+        var url = UrlHelper.BuildFinalUrl(Settings.Url);
 
         if (Context.ImageQuality == ImageQuality.High)
             return new OcrResult().Fail($"Not supported, please use {Context.GetTranslation("ImageQualityLow")} or {Context.GetTranslation("ImageQualityMedium")}");
@@ -139,11 +136,11 @@ public class Main : ObservableObject, IOcrPlugin, ILlm
         {
             Headers = new Dictionary<string, string>
             {
-                { "authorization", "Bearer " + Settings.ApiKey }
+                { "Authorization", "Bearer " + Settings.ApiKey }
             }
         };
 
-        var response = await Context.HttpService.PostAsync(uriBuilder.Uri.ToString(), content, option, cancellationToken);
+        var response = await Context.HttpService.PostAsync(url, content, option, cancellationToken);
         // 解析Google翻译返回的JSON
         var jsonDoc = JsonDocument.Parse(response);
         var rawData = jsonDoc

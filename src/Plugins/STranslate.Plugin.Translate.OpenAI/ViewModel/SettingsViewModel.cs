@@ -118,10 +118,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     {
         try
         {
-            UriBuilder uriBuilder = new(_settings.Url);
-            // 如果路径不是有效的API路径结尾，使用默认路径
-            if (uriBuilder.Path == "/")
-                uriBuilder.Path = "/v1/chat/completions";
+            var url = UrlHelper.BuildFinalUrl(_settings.Url);
 
             // 选择模型
             var model = _settings.Model.Trim();
@@ -147,11 +144,11 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             {
                 Headers = new Dictionary<string, string>
                 {
-                    { "authorization", "Bearer " + _settings.ApiKey }
+                    { "Authorization", "Bearer " + _settings.ApiKey }
                 }
             };
 
-            await _context.HttpService.StreamPostAsync(uriBuilder.Uri.ToString(), content, (x) => { }, option);
+            await _context.HttpService.StreamPostAsync(url, content, (x) => { }, option);
 
             ValidateResult = _context.GetTranslation("ValidationSuccess");
         }

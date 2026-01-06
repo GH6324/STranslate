@@ -618,4 +618,19 @@
     <sys:String x:Key="UpdateFailed">更新失敗</sys:String>
     <sys:String x:Key="UpdateFailedMessage">應用程式更新失敗。請檢查您的網路連接。</sys:String>
     <sys:String x:Key="NewVersionTips">新版本 {0} 已可用，是否重新啟動 STranslate 以使用更新？</sys:String>
+
+    <!--  // LLM Service Configurations for plugins //  -->
+    <sys:String x:Key="Url">API 介面</sys:String>
+    <sys:String x:Key="Url_Description">以 / 結尾忽略 v1 版本，以 # 結尾強制使用輸入地址</sys:String>
+    <sys:String x:Key="Url_ToolTip">最終請求的完整 URL</sys:String>
+    <sys:String x:Key="ApiKey">API 金鑰</sys:String>
+    <sys:String x:Key="ApiKey_Suggestion">請輸入 API 金鑰</sys:String>
+    <sys:String x:Key="Model">請選擇模型</sys:String>
+    <sys:String x:Key="Prompt_Header">提示詞配置</sys:String>
+    <sys:String x:Key="Prompt_Description">選擇或編輯翻譯使用的提示詞模板</sys:String>
+    <sys:String x:Key="Prompt_Placeholder">選擇提示詞模板</sys:String>
+    <sys:String x:Key="EditPrompt_ToolTip">編輯提示詞</sys:String>
+    <sys:String x:Key="EditPrompt_Content">編輯</sys:String>
+    <sys:String x:Key="Temperature">溫度控制</sys:String>
+    <sys:String x:Key="Temperature_Description">控制著模型輸出的隨機性</sys:String>
 </ResourceDictionary>

@@ -124,11 +124,8 @@ public class Main : LlmTranslatePluginBase
             return;
         }
 
-
-        UriBuilder uriBuilder = new(Settings.Url);
-        // 如果路径不是有效的API路径结尾，使用默认路径
-        if (uriBuilder.Path == "/")
-            uriBuilder.Path = "/v1/chat/completions";
+        // 构建最终URL
+        string url = UrlHelper.BuildFinalUrl(Settings.Url);
 
         // 选择模型
         var model = Settings.Model.Trim();
@@ -161,14 +158,14 @@ public class Main : LlmTranslatePluginBase
         {
             Headers = new Dictionary<string, string>
             {
-                { "authorization", "Bearer " + Settings.ApiKey }
+                { "Authorization", "Bearer " + Settings.ApiKey }
             }
         };
 
         StringBuilder sb = new();
         var isThink = false;
 
-        await Context.HttpService.StreamPostAsync(uriBuilder.Uri.ToString(), content, msg =>
+        await Context.HttpService.StreamPostAsync(url, content, msg =>
         {
             if (string.IsNullOrEmpty(msg?.Trim()))
                 return;
