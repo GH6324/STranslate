@@ -29,6 +29,8 @@
     <sys:String x:Key="SearchFunctionToolTip">按 Ctrl+F 搜索功能</sys:String>
     <sys:String x:Key="Function">功能</sys:String>
     <sys:String x:Key="Appearance">外观</sys:String>
+    <sys:String x:Key="AutoTranslateEnabled">启用自动翻译</sys:String>
+    <sys:String x:Key="AutoTranslateDisabled">禁用自动翻译</sys:String>
     <sys:String x:Key="General_AutoStartup">开机自启</sys:String>
     <sys:String x:Key="General_AutoStartupDescription">电脑启动时软件自动启动。</sys:String>
     <sys:String x:Key="General_StartMode">启动模式</sys:String>

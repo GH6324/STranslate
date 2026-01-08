@@ -636,6 +636,20 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     #endregion
 
+    #region Auto Translate
+
+    [RelayCommand]
+    private void ToggleAutoTranslate()
+    {
+        Settings.AutoTranslate = !Settings.AutoTranslate;
+        if (Settings.AutoTranslate)
+            _snackbar.ShowSuccess(_i18n.GetTranslation("AutoTranslateEnabled"));
+        else
+            _snackbar.ShowInfo(_i18n.GetTranslation("AutoTranslateDisabled"));
+    }
+
+    #endregion
+
     #endregion
 
     #region OCR & Screenshot Commands

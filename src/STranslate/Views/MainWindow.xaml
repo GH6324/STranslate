@@ -83,6 +83,10 @@
             Command="{Binding HistoryNextCommand}"
             CommandParameter="{Binding InputText}"
             Modifiers="{Binding HotkeySettings.HistoryNavigeNextHotkey.Key, Converter={cnvt:StringToKeyBindingConverter}, ConverterParameter={x:Static cnvt:HotkeyMode.Modifiers}}" />
+        <KeyBinding
+            Key="B"
+            Command="{Binding ToggleAutoTranslateCommand}"
+            Modifiers="Ctrl" />
     </Window.InputBindings>
     <Grid>
         <control:HeaderControl
