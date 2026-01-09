@@ -144,6 +144,7 @@
     <sys:String x:Key="Hotkey_SaveToVocabulary">Save To Vocabulary</sys:String>
     <sys:String x:Key="Hotkey_HistoryNavigePrevious">Navigate to previous history</sys:String>
     <sys:String x:Key="Hotkey_HistoryNavigeNext">Navigate to next history</sys:String>
+    <sys:String x:Key="Hotkey_AutoTranslate">Auto-Translate</sys:String>
     <sys:String x:Key="Hotkey_OcrImTransWindow">OCR | Image Translation Window Hotkey</sys:String>
     <sys:String x:Key="Hotkey_ReExecuteOcr">Re-execute Text Recognition | Image Translation</sys:String>
     <sys:String x:Key="Hotkey_SwitchImage">Switch Rendering/Annotation Image</sys:String>

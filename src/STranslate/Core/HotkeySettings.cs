@@ -45,6 +45,8 @@ public partial class HotkeySettings : ObservableObject
 
     public Hotkey HistoryNavigeNextHotkey { get; set; } = new("Ctrl + N");
 
+    public Hotkey AutoTranslateHotkey { get; set; } = new("Ctrl + B");
+
     #endregion
 
     #region Software Hotkeys - OcrWindow / ImageTranslateWindow
@@ -80,6 +82,7 @@ public partial class HotkeySettings : ObservableObject
         new RegisteredHotkeyData(SaveToVocabularyHotkey.Key, "Hotkey_SaveToVocabulary", HotkeyType.MainWindow, () => SaveToVocabularyHotkey.Key = Constant.EmptyHotkey),
         new RegisteredHotkeyData(HistoryNavigePreviousHotkey.Key, "Hotkey_HistoryNavigePrevious", HotkeyType.MainWindow, () => HistoryNavigePreviousHotkey.Key = Constant.EmptyHotkey),
         new RegisteredHotkeyData(HistoryNavigeNextHotkey.Key, "Hotkey_HistoryNavigeNext", HotkeyType.MainWindow, () => HistoryNavigeNextHotkey.Key = Constant.EmptyHotkey),
+        new RegisteredHotkeyData(AutoTranslateHotkey.Key, "Hotkey_AutoTranslate", HotkeyType.MainWindow, () => AutoTranslateHotkey.Key = Constant.EmptyHotkey),
 
         // OcrWindow / ImageTranslateWindow
         new RegisteredHotkeyData(ReExecuteOcrHotkey.Key, "Hotkey_ReExecuteOcr", HotkeyType.OcrWindow | HotkeyType.ImageTransWindow, () => ReExecuteOcrHotkey.Key = Constant.EmptyHotkey),
@@ -174,6 +177,7 @@ public partial class HotkeySettings : ObservableObject
             [nameof(ToggleTopmostHotkey)] = "Ctrl + Shift + T",
             [nameof(HistoryNavigePreviousHotkey)] = "Ctrl + P",
             [nameof(HistoryNavigeNextHotkey)] = "Ctrl + N",
+            [nameof(AutoTranslateHotkey)] = "Ctrl + B",
             // Software Hotkeys - OcrWindow / ImageTranslateWindow
             [nameof(ReExecuteOcrHotkey)] = "Ctrl + R",
             [nameof(QrCodeHotkey)] = "Ctrl + Shift + R",
