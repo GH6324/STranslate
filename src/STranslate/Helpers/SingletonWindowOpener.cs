@@ -29,6 +29,7 @@ public static class SingletonWindowOpener
 
         if (window != null)
         {
+            Win32Helper.SetForegroundWindow(window);
             Activate(window);
             return window;
         }
@@ -37,6 +38,7 @@ public static class SingletonWindowOpener
         window = await Application.Current.Dispatcher.InvokeAsync(() =>
         {
             var newWindow = (T)Activator.CreateInstance(typeof(T), args)!;
+            Win32Helper.SetForegroundWindow(newWindow);
             Activate(newWindow);
             return newWindow;
         }, DispatcherPriority.Background);

@@ -83,6 +83,10 @@
             Command="{Binding HistoryNextCommand}"
             CommandParameter="{Binding InputText}"
             Modifiers="{Binding HotkeySettings.HistoryNavigeNextHotkey.Key, Converter={cnvt:StringToKeyBindingConverter}, ConverterParameter={x:Static cnvt:HotkeyMode.Modifiers}}" />
+        <KeyBinding
+            Key="{Binding HotkeySettings.AutoTranslateHotkey.Key, Converter={cnvt:StringToKeyBindingConverter}, ConverterParameter={x:Static cnvt:HotkeyMode.Key}}"
+            Command="{Binding ToggleAutoTranslateCommand}"
+            Modifiers="{Binding HotkeySettings.AutoTranslateHotkey.Key, Converter={cnvt:StringToKeyBindingConverter}, ConverterParameter={x:Static cnvt:HotkeyMode.Modifiers}}" />
     </Window.InputBindings>
     <Grid>
         <control:HeaderControl
@@ -91,14 +95,19 @@
             ColorSchemeCommand="{Binding ChangeColorSchemeCommand}"
             HistoryNextCommand="{Binding HistoryNextCommand}"
             HistoryPreviousCommand="{Binding HistoryPreviousCommand}"
+            IsAutoTranslate="{Binding Settings.AutoTranslate}"
+            IsAutoTranslateVisible="{Binding Settings.IsAutoTranslateVisible}"
             IsColorSchemeVisible="{Binding Settings.IsColorSchemeVisible}"
             IsHideInput="{Binding Settings.HideInput}"
             IsHideInputVisible="{Binding Settings.IsHideInputVisible}"
             IsHistoryNavigationVisible="{Binding Settings.IsHistoryNavigationVisible}"
             IsMouseHook="{Binding IsMouseHook}"
             IsMouseHookVisible="{Binding Settings.IsMouseHookVisible}"
+            IsOcrVisible="{Binding Settings.IsOcrVisible}"
             IsScreenshotTranslateInImageVisible="{Binding Settings.IsScreenshotTranslateInImageVisible}"
             IsTopmost="{Binding IsTopmost}"
+            OcrCommand="{Binding OcrCommand}"
+            ScreenshotTranslateCommand="{Binding ScreenshotTranslateCommand}"
             ScreenshotTranslateInImage="{Binding Settings.ScreenshotTranslateInImage}"
             SettingCommand="{Binding OpenSettingsCommand}" />
 
@@ -277,7 +286,7 @@
                 <s:BindingProxy x:Key="ViewModel" Data="{Binding}" />
             </tb:TaskbarIcon.Resources>
             <tb:TaskbarIcon.ContextMenu>
-                <ContextMenu Style="{DynamicResource DefaultContextMenuStyle}">
+                <ContextMenu>
                     <MenuItem Command="{Binding Source={StaticResource ViewModel}, Path=Data.ToggleAppCommand}">
                         <MenuItem.Header>
                             <Grid>

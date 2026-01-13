@@ -29,6 +29,8 @@
     <sys:String x:Key="SearchFunctionToolTip">按 Ctrl+F 搜尋功能</sys:String>
     <sys:String x:Key="Function">功能</sys:String>
     <sys:String x:Key="Appearance">外觀</sys:String>
+    <sys:String x:Key="AutoTranslateEnabled">啟用自動翻譯</sys:String>
+    <sys:String x:Key="AutoTranslateDisabled">停用自動翻譯</sys:String>
     <sys:String x:Key="General_AutoStartup">開機自動啟動</sys:String>
     <sys:String x:Key="General_AutoStartupDescription">電腦啟動時軟體自動啟動。</sys:String>
     <sys:String x:Key="General_StartMode">啟動模式</sys:String>
@@ -54,6 +56,11 @@
     <sys:String x:Key="General_HttpTimeoutDescription">網路請求的逾時時間，單位：秒。</sys:String>
     <sys:String x:Key="General_TranslateOnPaste">貼上立即翻譯</sys:String>
     <sys:String x:Key="General_TranslateOnPasteDescription">輸入框內貼上文字立即執行翻譯。</sys:String>
+    <sys:String x:Key="General_AutoTranslate">自動翻譯</sys:String>
+    <sys:String x:Key="General_AutoTranslateDescription">輸入內容等待一定時間後自動執行翻譯。</sys:String>
+    <sys:String x:Key="General_AutoTranslateButtonVisible">在主界面上顯示自動翻譯按鈕</sys:String>
+    <sys:String x:Key="General_AutoTranslateDelay">自動翻譯延時</sys:String>
+    <sys:String x:Key="General_AutoTranslateDelayDescription">輸入內容等待時間，單位：毫秒。</sys:String>
     <sys:String x:Key="General_LineBreakHandleType">取詞換行處理</sys:String>
     <sys:String x:Key="General_LineBreakHandleTypeDescription" xml:space="preserve">包括劃詞、截圖翻譯、剪貼簿、靜默 OCR 取詞場景的換行處理。&#10;「移除多餘換行」主要針對 PDF 取詞場景，移除多餘的換行與斷句，但對非 PDF 取詞可能會有影響。</sys:String>
     <sys:String x:Key="General_ImageQuality">圖片品質</sys:String>
@@ -63,7 +70,8 @@
     <sys:String x:Key="General_Language">語言</sys:String>
     <sys:String x:Key="General_ScreenshotTranslateInImage">圖片內翻譯</sys:String>
     <sys:String x:Key="General_ScreenshotTranslateInImageDescription">截圖翻譯時是否啟用圖片內翻譯。</sys:String>
-    <sys:String x:Key="General_ScreenshotTranslateInImageButtonVisible">在主界面顯示啟用圖片內翻譯按鈕。</sys:String>
+    <sys:String x:Key="General_ScreenshotTranslateInImageButtonVisible">在主介面上顯示「螢幕擷取翻譯」|「啟用/停用圖片內翻譯」按鈕</sys:String>
+    <sys:String x:Key="General_ScreenshotTranslateButtonToolTip" xml:space="preserve">「滑鼠點擊」螢幕擷取翻譯&#10;「Ctrl+滑鼠點擊」開啟/關閉圖片內翻譯</sys:String>
     <sys:String x:Key="General_ShowScreenshotAuxiliaryLines">截圖輔助線</sys:String>
     <sys:String x:Key="General_ShowScreenshotAuxiliaryLinesDescription">截圖時是否顯示輔助線，幫助更精確地選擇區域。</sys:String>
     <sys:String x:Key="General_HideNotifyIcon">隱藏托盤圖示</sys:String>
@@ -82,6 +90,8 @@
     <sys:String x:Key="General_ShowMouseHookDescription">主介面是否顯示快捷啟用/禁用監聽滑鼠劃詞圖示。</sys:String>
     <sys:String x:Key="General_ShowHistoryNavigation">顯示歷史導航</sys:String>
     <sys:String x:Key="General_ShowHistoryNavigationDescription">主介面是否顯示向前/向後歷史翻譯記錄導航圖示。</sys:String>
+    <sys:String x:Key="General_ShowOcrButton">顯示OCR按鈕</sys:String>
+    <sys:String x:Key="General_ShowOcrButtonDescription">在主介面標題欄顯示OCR按鈕。</sys:String>
     <sys:String x:Key="General_FontSize">字體大小</sys:String>
     <sys:String x:Key="General_FontSizeDescription">調整除「右鍵選單」外的所有字型大小</sys:String>
     <sys:String x:Key="General_OutputShowingControl">輸出控件顯示控制</sys:String>
@@ -135,6 +145,7 @@
     <sys:String x:Key="Hotkey_SaveToVocabulary">保存到生詞本</sys:String>
     <sys:String x:Key="Hotkey_HistoryNavigePrevious">導覽到上一條歷史記錄</sys:String>
     <sys:String x:Key="Hotkey_HistoryNavigeNext">導覽到下一條歷史記錄</sys:String>
+    <sys:String x:Key="Hotkey_AutoTranslate">自動翻譯</sys:String>
     <sys:String x:Key="Hotkey_OcrImTransWindow">OCR | 圖片翻譯視窗快捷鍵</sys:String>
     <sys:String x:Key="Hotkey_ReExecuteOcr">重新執行文字識別 | 圖片翻譯</sys:String>
     <sys:String x:Key="Hotkey_SwitchImage">切換渲染圖/標註圖</sys:String>
@@ -154,7 +165,8 @@
     <sys:String x:Key="TransExecPinned">釘到語言區手動執行</sys:String>
 
     <!--  // Plugin Page //  -->
-    <sys:String x:Key="AddPlugin">新增外掛「spkg」</sys:String>
+    <sys:String x:Key="Market">市場</sys:String>
+    <sys:String x:Key="AddPlugin">安裝</sys:String>
     <sys:String x:Key="PluginName">名稱</sys:String>
     <sys:String x:Key="PluginAuthor">作者</sys:String>
     <sys:String x:Key="PluginType">類型</sys:String>
@@ -169,6 +181,7 @@
     <sys:String x:Key="Network_ExternalCallPort">外部呼叫端口</sys:String>
     <sys:String x:Key="Network_ExternalCallPortDescription">外部呼叫端口，地址為 localhost</sys:String>
     <sys:String x:Key="Network_ExternalCallPortPlaceholder">例如：50020</sys:String>
+    <sys:String x:Key="Network_ExternalCallPortError">外部呼叫錯誤訊息</sys:String>
     <sys:String x:Key="Network_EnableProxy">啟用代理</sys:String>
     <sys:String x:Key="Network_EnableProxyDescription">啟用或禁用代理功能</sys:String>
     <sys:String x:Key="Network_ProxyType">代理類型</sys:String>
@@ -552,6 +565,7 @@
     <sys:String x:Key="ThirdPersonSingular">第三人稱單數</sys:String>
     <sys:String x:Key="Comparative">比較級</sys:String>
     <sys:String x:Key="Superlative">最高級</sys:String>
+    <sys:String x:Key="Tag">標籤</sys:String>
 
     <!--  // OCR Window //  -->
     <sys:String x:Key="SelectAll">全選</sys:String>
@@ -614,4 +628,19 @@
     <sys:String x:Key="UpdateFailed">更新失敗</sys:String>
     <sys:String x:Key="UpdateFailedMessage">應用程式更新失敗。請檢查您的網路連接。</sys:String>
     <sys:String x:Key="NewVersionTips">新版本 {0} 已可用，是否重新啟動 STranslate 以使用更新？</sys:String>
+
+    <!--  // LLM Service Configurations for plugins //  -->
+    <sys:String x:Key="Url">API 介面</sys:String>
+    <sys:String x:Key="Url_Description">以「#」結尾強制使用輸入位址</sys:String>
+    <sys:String x:Key="Url_ToolTip">最終請求的完整 URL</sys:String>
+    <sys:String x:Key="ApiKey">API 金鑰</sys:String>
+    <sys:String x:Key="ApiKey_Suggestion">請輸入 API 金鑰</sys:String>
+    <sys:String x:Key="Model">請選擇模型</sys:String>
+    <sys:String x:Key="Prompt_Header">提示詞配置</sys:String>
+    <sys:String x:Key="Prompt_Description">選擇或編輯翻譯使用的提示詞模板</sys:String>
+    <sys:String x:Key="Prompt_Placeholder">選擇提示詞模板</sys:String>
+    <sys:String x:Key="EditPrompt_ToolTip">編輯提示詞</sys:String>
+    <sys:String x:Key="EditPrompt_Content">編輯</sys:String>
+    <sys:String x:Key="Temperature">溫度控制</sys:String>
+    <sys:String x:Key="Temperature_Description">控制著模型輸出的隨機性</sys:String>
 </ResourceDictionary>

@@ -67,7 +67,13 @@ if (Test-Path $src) {
 
 # 构建解决方案
 Log "正在重新生成解决方案..."
-dotnet build .\src\STranslate.sln --configuration Release --no-incremental
+dotnet build .\src\STranslate.sln `
+  --configuration Release `
+  --no-incremental `
+  /p:Version=$CleanVersion `
+  /p:PackageVersion=$CleanVersion `
+  /p:InformationalVersion=$CleanVersion
+
 
 # 还原 FodyWeavers.xml
 Log "正在还原 FodyWeavers.xml SolutionAssemblyInfo.cs..."

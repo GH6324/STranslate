@@ -260,6 +260,15 @@
                                 ValidateKeyGesture="False"
                                 WindowTitle="{DynamicResource Hotkey_HistoryNavigeNext}" />
                         </ui:SettingsCard>
+
+                        <ui:SettingsCard Header="{DynamicResource Hotkey_AutoTranslate}">
+                            <control:HotkeyControl
+                                DefaultHotkey="{Binding HotkeySettings.AutoTranslateHotkey.Default}"
+                                Hotkey="{Binding HotkeySettings.AutoTranslateHotkey.Key}"
+                                Type="MainWindow"
+                                ValidateKeyGesture="False"
+                                WindowTitle="{DynamicResource Hotkey_AutoTranslate}" />
+                        </ui:SettingsCard>
                     </ui:SettingsExpander.Items>
                 </ui:SettingsExpander>
 

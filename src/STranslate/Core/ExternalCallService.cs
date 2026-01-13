@@ -31,12 +31,14 @@ public class ExternalCallService(
             _listener.BeginGetContext(Callback, _listener);
             IsStarted = true;
 
+            OnActionOccurred?.Invoke(string.Empty);
             return true;
         }
         catch (Exception ex)
         {
             var msg = $"启动服务失败请重新配置端口: {prefix}";
             logger.LogError(ex, msg);
+            OnActionOccurred?.Invoke(msg);
             notification.Show(i18n.GetTranslation("Prompt"), msg);
 
             return false;
@@ -48,6 +50,7 @@ public class ExternalCallService(
         if (!IsStarted)
             return;
 
+        OnActionOccurred?.Invoke(string.Empty);
         _listener?.Close();
         _listener = null;
         IsStarted = false;
@@ -118,7 +121,7 @@ public class ExternalCallService(
 
     private void ExecuteExternalCall(ExternalCallAction action, string content)
     {
-        App.Current.Dispatcher.Invoke(() =>
+        App.Current.Dispatcher.Invoke(async () =>
         {
             switch (action)
             {
@@ -141,7 +144,10 @@ public class ExternalCallService(
                     if (string.IsNullOrWhiteSpace(content))
                         viewModel.ScreenshotTranslateCommand.Execute(null);
                     else
-                        _ = viewModel.ScreenshotTranslateHandlerAsync(Utilities.ToBitmap(content));
+                    {
+                        using var bitmap = Utilities.ToBitmap(content);
+                        await viewModel.ScreenshotTranslateHandlerAsync(bitmap);
+                    }
                     break;
                 case ExternalCallAction.translate_crossword:
                     viewModel.CrosswordTranslateCommand.Execute(null);
@@ -150,19 +156,48 @@ public class ExternalCallService(
                     viewModel.ToggleMouseHookTranslateCommand.Execute(null);
                     break;
                 case ExternalCallAction.translate_replace:
-                    viewModel.ReplaceTranslateCommand.Execute(null);
+                    {
+                        if (viewModel.ReplaceTranslateCommand.IsRunning)
+                        {
+                            viewModel.ReplaceTranslateCancelCommand.Execute(null);
+                            return;
+                        }
+                        viewModel.ReplaceTranslateCommand.Execute(null);
+                    }
                     break;
                 case ExternalCallAction.ocr:
                     if (string.IsNullOrWhiteSpace(content))
                         viewModel.OcrCommand.Execute(null);
                     else
-                        _ = viewModel.OcrHandlerAsync(Utilities.ToBitmap(content));
+                    {
+                        using var bitmap = Utilities.ToBitmap(content);
+                        await viewModel.OcrHandlerAsync(bitmap);
+                    }
                     break;
                 case ExternalCallAction.ocr_silence:
                     if (string.IsNullOrWhiteSpace(content))
+                    {
+                        if (viewModel.SilentOcrCommand.IsRunning)
+                        {
+                            viewModel.SilentOcrCancelCommand.Execute(null);
+                            return;
+                        }
                         viewModel.SilentOcrCommand.Execute(null);
+                    }
                     else
-                        _ = viewModel.SilentOcrHandlerAsync(Utilities.ToBitmap(content));
+                    {
+                        using var bitmap = Utilities.ToBitmap(content);
+                        await viewModel.SilentOcrHandlerAsync(bitmap);
+                    }
+                    break;
+                case ExternalCallAction.ocr_qrcode:
+                    if (string.IsNullOrWhiteSpace(content))
+                        viewModel.QrCodeCommand.Execute(null);
+                    else
+                    {
+                        using var bitmap = Utilities.ToBitmap(content);
+                        await viewModel.QrCodeHandlerAsync(bitmap);
+                    }
                     break;
                 case ExternalCallAction.open_window:
                     viewModel.ToggleAppCommand.Execute(null);
@@ -171,16 +206,23 @@ public class ExternalCallService(
                     viewModel.OpenSettingsCommand.Execute(null);
                     break;
                 case ExternalCallAction.open_history:
-                    //TODO
+                    viewModel.OpenHistoryCommand.Execute(null);
                     break;
                 case ExternalCallAction.forbiddenhotkey:
                     viewModel.ToggleGlobalHotkey();
                     break;
                 case ExternalCallAction.tts_silence:
                     if (string.IsNullOrWhiteSpace(content))
+                    {
+                        if (viewModel.SilentTtsCommand.IsRunning)
+                        {
+                            viewModel.SilentTtsCancelCommand.Execute(null);
+                            return;
+                        }
                         viewModel.SilentTtsCommand.Execute(null);
+                    }
                     else
-                        _ = viewModel.SilentTtsHandlerAsync(content);
+                        await viewModel.SilentTtsHandlerAsync(content);
                     break;
                 default:
                     break;
@@ -218,6 +260,8 @@ public class ExternalCallService(
         writer.Close();
         response.Close();
     }
+
+    public Action<string>? OnActionOccurred;
 }
 
 /// <summary>
@@ -234,6 +278,7 @@ public enum ExternalCallAction
     translate_replace,
     ocr,
     ocr_silence,
+    ocr_qrcode,
     open_window,
     open_preference,
     open_history,

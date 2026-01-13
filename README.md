@@ -24,7 +24,7 @@
 
 **English** | [**简体中文**](./README_ZH.md)
 
-<a href="https://trendshift.io/repositories/6979" target="_blank"><img src="https://trendshift.io/api/badge/repositories/6979" alt="ZGGSONG%2FSTranslate | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+<a href="https://trendshift.io/repositories/15843" target="_blank"><img src="https://trendshift.io/api/badge/repositories/15843" alt="STranslate%2FSTranslate | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
 <p align="center">A <strong>ready-to-go</strong> translation and OCR tool developed with WPF.</p>
 
@@ -66,11 +66,18 @@ If you like it, you can buy the author a cup of coffee.
 | :--: | :--: |
 |![wehcatpay](./images/wechatpay.jpg) | ![alipay](./images/alipay.jpg) |
 
-## Author
+## Author & Maintainer
 
-**STranslate** © [zggsong](https://github.com/zggsong), Released under the [MIT](https://github.com/STranslate/STranslate/blob/main/LICENSE) License.<br>
+**STranslate**
 
-> Website [Blog](https://www.zggsong.com) · GitHub [@zggsong](https://github.com/zggsong)
+Copyright © [zggsong](https://github.com/zggsong)
+
+- Original author: [zggsong](https://github.com/zggsong)
+- Organization: [STranslate](https://github.com/STranslate)
+- License: [MIT](./LICENSE)
+
+> [Website](https://stranslate.zggsong.com) [Blog](https://www.zggsong.com)
+
 
 ## Star History
 

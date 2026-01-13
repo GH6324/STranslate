@@ -24,7 +24,7 @@
 
 [**English**](./README.md) | **简体中文**
 
-<a href="https://trendshift.io/repositories/6979" target="_blank"><img src="https://trendshift.io/api/badge/repositories/6979" alt="ZGGSONG%2FSTranslate | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+<a href="https://trendshift.io/repositories/15843" target="_blank"><img src="https://trendshift.io/api/badge/repositories/15843" alt="STranslate%2FSTranslate | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
 <p align="center">WPF 开发的一款<strong>即用即走</strong>的翻译、OCR工具</p>
 
@@ -69,9 +69,15 @@
 
 ## 作者
 
-**STranslate** © [zggsong](https://github.com/zggsong), Released under the [MIT](https://github.com/STranslate/STranslate/blob/main/LICENSE) License.<br>
+**STranslate**
 
-> Website [Blog](https://www.zggsong.com) · GitHub [@zggsong](https://github.com/zggsong)
+版权所有 © [zggsong](https://github.com/zggsong)
+
+- 原始作者：[@zggsong](https://github.com/zggsong)
+- 项目组织：[STranslate](https://github.com/STranslate)
+- 许可证：[MIT](./LICENSE)
+
+> [Website](https://stranslate.zggsong.com) [Blog](https://www.zggsong.com)
 
 ## 星标历史
 

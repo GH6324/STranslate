@@ -82,9 +82,53 @@ public static class Win32Helper
 
     public static unsafe nint GetForegroundWindow() => (nint)PInvoke.GetForegroundWindow().Value;
 
-    public static bool SetForegroundWindow(Window window) => PInvoke.SetForegroundWindow(GetWindowHandle(window));
+    public static bool SetForegroundWindow(Window window) => SetForegroundWindow(GetWindowHandle(window));
 
-    public static bool SetForegroundWindow(nint handle) => PInvoke.SetForegroundWindow(new(handle));
+    public static bool SetForegroundWindow(nint handle) => SetForegroundWindow(new HWND(handle));
+
+    /// <summary>
+    /// 强制将窗口带到前台，使用 AttachThreadInput 绕过系统限制
+    /// </summary>
+    internal static bool SetForegroundWindow(HWND handle)
+    {
+        var foregroundWnd = PInvoke.GetForegroundWindow();
+        if (handle == foregroundWnd) return true;
+
+        var currentThreadId = PInvoke.GetCurrentThreadId();
+        var foregroundThreadId = PInvoke.GetWindowThreadProcessId(foregroundWnd, out _);
+
+        // 如果前台窗口属于不同的线程，尝试挂接输入
+        bool needDetach = false;
+        if (foregroundThreadId != currentThreadId && foregroundThreadId != 0)
+        {
+            // 挂接当前线程到前台窗口线程
+            needDetach = PInvoke.AttachThreadInput(foregroundThreadId, currentThreadId, true);
+        }
+
+        // 尝试设置前台窗口
+        // 注意：在挂接状态下，这通常会成功
+        var result = PInvoke.SetForegroundWindow(handle);
+
+        // 尝试恢复窗口（如果是最小化）
+        if (PInvoke.IsIconic(handle))
+        {
+            PInvoke.ShowWindow(handle, SHOW_WINDOW_CMD.SW_RESTORE);
+        }
+
+        if (needDetach)
+        {
+            // 解除挂接
+            PInvoke.AttachThreadInput(foregroundThreadId, currentThreadId, false);
+        }
+
+        // 再次尝试 BringWindowToTop 作为兜底
+        if (!result)
+        {
+            PInvoke.BringWindowToTop(handle);
+        }
+
+        return result || PInvoke.GetForegroundWindow() == handle;
+    }
 
     public static bool IsForegroundWindow(Window window) => IsForegroundWindow(GetWindowHandle(window));
 

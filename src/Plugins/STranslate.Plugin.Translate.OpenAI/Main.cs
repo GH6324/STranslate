@@ -124,11 +124,8 @@ public class Main : LlmTranslatePluginBase
             return;
         }
 
-
-        UriBuilder uriBuilder = new(Settings.Url);
-        // 如果路径不是有效的API路径结尾，使用默认路径
-        if (uriBuilder.Path == "/")
-            uriBuilder.Path = "/v1/chat/completions";
+        // 构建最终URL
+        string url = UrlHelper.BuildFinalUrl(Settings.Url);
 
         // 选择模型
         var model = Settings.Model.Trim();
@@ -161,16 +158,16 @@ public class Main : LlmTranslatePluginBase
         {
             Headers = new Dictionary<string, string>
             {
-                { "authorization", "Bearer " + Settings.ApiKey }
+                { "Authorization", "Bearer " + Settings.ApiKey }
             }
         };
 
         StringBuilder sb = new();
         var isThink = false;
 
-        await Context.HttpService.StreamPostAsync(uriBuilder.Uri.ToString(), content, msg =>
+        await Context.HttpService.StreamPostAsync(url, content, msg =>
         {
-            if (string.IsNullOrEmpty(msg?.Trim()))
+            if (string.IsNullOrEmpty(msg?.Trim()) || msg == ": OPENROUTER PROCESSING")
                 return;
 
             var preprocessString = msg.Replace("data:", "").Trim();
@@ -181,23 +178,6 @@ public class Main : LlmTranslatePluginBase
 
             try
             {
-                /**
-                 * 
-                 * var parsedData = JsonDocument.Parse(preprocessString);
-
-                if (parsedData is null)
-                    return;
-
-                var root = parsedData.RootElement;
-
-                // 提取 content 的值
-                var contentValue = root
-                    .GetProperty("choices")[0]
-                    .GetProperty("delta")
-                    .GetProperty("content")
-                    .GetString();
-                * 
-                 */
                 // 解析JSON数据
                 var parsedData = JsonNode.Parse(preprocessString);
 

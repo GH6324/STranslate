@@ -206,7 +206,11 @@ public partial class ImageTranslateWindowViewModel : ObservableObject, IDisposab
                 {
                     _logger.LogWarning($"Language detection failed for text: {content.Text}");
                     _notification.Show(_i18n.GetTranslation("Prompt"), "语言检测失败");
+                    return;
                 }
+                if (string.IsNullOrWhiteSpace(content.Text))
+                    return;
+
                 var result = new TranslateResult();
                 await tranSvc.TranslateAsync(new TranslateRequest(content.Text, source, target), result, cancellationToken);
                 content.Text = result.IsSuccess ? result.Text : content.Text;
@@ -244,7 +248,7 @@ public partial class ImageTranslateWindowViewModel : ObservableObject, IDisposab
     [RelayCommand]
     private async Task OpenSettingsAsync()
     {
-        await _mainWindowViewModel.OpenSettingsCommand.ExecuteAsync(null);
+        await _mainWindowViewModel.OpenSettingsInternalAsync(null);
 
         if (Keyboard.Modifiers == ModifierKeys.Control)
         {

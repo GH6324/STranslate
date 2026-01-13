@@ -67,6 +67,8 @@ public partial class Settings : ObservableObject
 
     [ObservableProperty] public partial bool IsHistoryNavigationVisible { get; set; } = true;
 
+    [ObservableProperty] public partial bool IsOcrVisible { get; set; } = true;
+
     [ObservableProperty] public partial DoubleClickTrayFunction DoubleClickTrayFunction { get; set; }
 
     [ObservableProperty] public partial CopyAfterTranslation CopyAfterTranslation { get; set; }
@@ -105,6 +107,18 @@ public partial class Settings : ObservableObject
     /// 粘贴时自动翻译
     /// </summary>
     [ObservableProperty] public partial bool TranslateOnPaste { get; set; } = true;
+
+    [ObservableProperty] public partial bool IsAutoTranslateVisible { get; set; } = true;
+
+    /// <summary>
+    /// 自动翻译
+    /// </summary>
+    [ObservableProperty] public partial bool AutoTranslate { get; set; } = false;
+
+    /// <summary>
+    /// 自动翻译延时（毫秒）
+    /// </summary>
+    [ObservableProperty] public partial int AutoTranslateDelayMs { get; set; } = 500;
 
     public double PreviousScreenWidth { get; set; }
     public double PreviousScreenHeight { get; set; }
@@ -310,7 +324,8 @@ public partial class Settings : ObservableObject
 
             if (e.PropertyName == nameof(MainWindowTop) ||
                 e.PropertyName == nameof(MainWindowLeft) ||
-                e.PropertyName == nameof(MainWindowWidth))
+                e.PropertyName == nameof(MainWindowWidth) ||
+                e.PropertyName == nameof(AutoTranslateDelayMs))
                 SaveWithDebounce();
             else
                 Save();
@@ -364,34 +379,11 @@ public partial class Settings : ObservableObject
 
     #region Private Methods
 
-    private Timer? _saveTimer;
-    private readonly Lock _timerLock = new();
+    private readonly DebounceExecutor _debounceExecutor = new();
     private const int DebounceTimeMs = 500; // 防抖时间
     internal void SaveWithDebounce()
     {
-        lock (_timerLock)
-        {
-            // 如果计时器已存在，则重置
-            _saveTimer?.Change(DebounceTimeMs, Timeout.Infinite);
-
-            // 如果计时器不存在，则创建
-            _saveTimer ??= new Timer(
-                (state) =>
-                {
-                    // 计时器到点，执行真正的保存
-                    Save();
-
-                    // 释放计时器
-                    lock (_timerLock)
-                    {
-                        _saveTimer?.Dispose();
-                        _saveTimer = null;
-                    }
-                },
-                null,
-                DebounceTimeMs, // 500毫秒后执行
-                Timeout.Infinite); // 只执行一次
-        }
+        _debounceExecutor.Execute(Save, TimeSpan.FromMilliseconds(DebounceTimeMs));
     }
 
     private void HandlePropertyChanged(string? propertyName)
@@ -527,21 +519,20 @@ public partial class Settings : ObservableObject
 
     private void ApplyTheme()
     {
-        ThemeManager.SetRequestedTheme(App.Current.MainWindow, ColorScheme);
-        var window = App.Current.Windows.OfType<SettingsWindow>().FirstOrDefault();
-        if (window != null)
+        // 遍历所有窗口统一应用主题
+        foreach (System.Windows.Window window in App.Current.Windows)
         {
             ThemeManager.SetRequestedTheme(window, ColorScheme);
         }
-        var promptWindow = App.Current.Windows.OfType<PromptEditWindow>().FirstOrDefault();
-        if (promptWindow != null)
+
+        // 为 TaskbarIcon 的 ContextMenu 应用主题
+        if (App.Current.MainWindow is MainWindow mainWindow)
         {
-            ThemeManager.SetRequestedTheme(promptWindow, ColorScheme);
-        }
-        var ocrWindow = App.Current.Windows.OfType<OcrWindow>().FirstOrDefault();
-        if (ocrWindow != null)
-        {
-            ThemeManager.SetRequestedTheme(ocrWindow, ColorScheme);
+            var notifyIcon = mainWindow.FindName("PART_NotifyIcon") as Hardcodet.Wpf.TaskbarNotification.TaskbarIcon;
+            if (notifyIcon?.ContextMenu != null)
+            {
+                ThemeManager.SetRequestedTheme(notifyIcon.ContextMenu, ColorScheme);
+            }
         }
     }
 

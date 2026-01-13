@@ -5,14 +5,15 @@ using iNKORE.UI.WPF.Modern;
 using Microsoft.Extensions.Logging;
 using STranslate.Core;
 using STranslate.Helpers;
-using STranslate.Services;
 using STranslate.Plugin;
 using STranslate.Resources;
+using STranslate.Services;
 using STranslate.ViewModels.Pages;
 using STranslate.Views;
 using STranslate.Views.Pages;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 
@@ -37,6 +38,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     public VocabularyService VocabularyService { get; }
 
     private readonly SqlService _sqlService;
+    private readonly DebounceExecutor _debounceExecutor;
 
     public Settings Settings { get; }
     public HotkeySettings HotkeySettings { get; }
@@ -72,6 +74,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         Settings = settings;
         HotkeySettings = hotkeySettings;
 
+        _debounceExecutor = new();
         _i18n.OnLanguageChanged += OnLanguageChanged;
     }
 
@@ -151,6 +154,9 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [RelayCommand(IncludeCancelCommand = true, CanExecute = nameof(CanTranslate))]
     private async Task TranslateAsync(string? force, CancellationToken cancellationToken)
     {
+        // 取消防抖执行器中的待执行任务
+        _debounceExecutor.Cancel();
+
         ResetAllServices();
 
         IdentifiedLanguage = string.Empty;
@@ -633,6 +639,20 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     #endregion
 
+    #region Auto Translate
+
+    [RelayCommand]
+    private void ToggleAutoTranslate()
+    {
+        Settings.AutoTranslate = !Settings.AutoTranslate;
+        if (Settings.AutoTranslate)
+            _snackbar.ShowSuccess(_i18n.GetTranslation("AutoTranslateEnabled"));
+        else
+            _snackbar.ShowInfo(_i18n.GetTranslation("AutoTranslateDisabled"));
+    }
+
+    #endregion
+
     #endregion
 
     #region OCR & Screenshot Commands
@@ -739,6 +759,11 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             return;
 
         using var bitmap = await _screenshot.GetScreenshotAsync();
+        await QrCodeHandlerAsync(bitmap);
+    }
+
+    public async Task QrCodeHandlerAsync(System.Drawing.Bitmap? bitmap)
+    {
         if (bitmap == null) return;
         var window = await SingletonWindowOpener.OpenAsync<OcrWindow>();
         ((OcrWindowViewModel)window.DataContext).QrCode(bitmap);
@@ -1003,14 +1028,14 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         {
             Show();
             IsTopmost = true;
-            await Utilities.StartMouseTextSelectionAsync();
-            Utilities.MouseTextSelected += OnMouseTextSelected;
+            await MouseKeyHelper.StartMouseTextSelectionAsync();
+            MouseKeyHelper.MouseTextSelected += OnMouseTextSelected;
         }
         else
         {
             IsTopmost = false;
-            Utilities.StopMouseTextSelection();
-            Utilities.MouseTextSelected -= OnMouseTextSelected;
+            MouseKeyHelper.StopMouseTextSelection();
+            MouseKeyHelper.MouseTextSelected -= OnMouseTextSelected;
         }
     }
 
@@ -1117,8 +1142,13 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         }
         MainWindow.Visibility = Visibility.Visible;
         UpdatePosition();
+
+        Win32Helper.SetForegroundWindow(MainWindow);
+
         MainWindow.Activate();
+
         MainWindow.PART_Input.Focus();
+        Keyboard.Focus(MainWindow.PART_Input);
     }
 
     public void Hide() => MainWindow.Visibility = Visibility.Collapsed;
@@ -1187,6 +1217,16 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task OpenSettingsAsync(object? parameter)
     {
+        await OpenSettingsInternalAsync(parameter);
+
+        Application.Current.Windows
+                    .OfType<SettingsWindow>()
+                    .First()
+                    .Navigate(nameof(GeneralPage));
+    }
+
+    internal async Task OpenSettingsInternalAsync(object? parameter)
+    {
         // 如果由 ContextMenu 触发，等待关闭动画完成
         if (parameter is not null)
             await Task.Delay(ContextMenuCloseAnimationDelay);
@@ -1201,7 +1241,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task OpenHistoryAsync()
     {
-        await OpenSettingsAsync(null);
+        await OpenSettingsInternalAsync(null);
         Application.Current.Windows
                     .OfType<SettingsWindow>()
                     .First()
@@ -1211,7 +1251,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task NavigateAsync(Service service)
     {
-        await OpenSettingsAsync(string.Empty);
+        await OpenSettingsInternalAsync(string.Empty);
         await Application.Current.Dispatcher.InvokeAsync(() =>
         {
             Application.Current.Windows
@@ -1529,6 +1569,25 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     {
         if (!string.IsNullOrWhiteSpace(IdentifiedLanguage))
             IdentifiedLanguage = string.Empty;
+
+        if (!Settings.AutoTranslate)
+            return;
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            _debounceExecutor.Cancel();
+            return;
+        }
+
+        void Execute()
+        {
+            CancelAllOperations();
+            App.Current.Dispatcher.Invoke(() => TranslateCommand.Execute(null));
+            Show();
+            UpdateCaret();
+        }
+
+        _debounceExecutor.Execute(Execute, TimeSpan.FromMilliseconds(Settings.AutoTranslateDelayMs));
     }
 
     partial void OnIsMouseHookChanged(bool value) => _ = ToggleMouseHookAsync(value);
@@ -1598,7 +1657,9 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
-        Utilities.MouseTextSelected -= OnMouseTextSelected;
+        _debounceExecutor.Dispose();
+
+        MouseKeyHelper.MouseTextSelected -= OnMouseTextSelected;
 
         // 如果窗口一直没打开过，恢复位置后再退出
         if (Settings.MainWindowLeft <= -18000 && Settings.MainWindowTop <= -18000)

@@ -6,7 +6,7 @@ using STranslate.Plugin;
 
 namespace STranslate.ViewModels.Pages;
 
-public partial class HistoryViewModel : ObservableObject
+public partial class HistoryViewModel : ObservableObject, IDisposable
 {
     private const int PageSize = 20;
     private const int searchDelayMilliseconds = 500;
@@ -14,7 +14,7 @@ public partial class HistoryViewModel : ObservableObject
     private readonly SqlService _sqlService;
     private readonly ISnackbar _snackbar;
     private readonly Internationalization _i18n;
-    private readonly Timer _searchTimer;
+    private readonly DebounceExecutor _searchDebouncer;
 
     private CancellationTokenSource? _searchCts;
     private DateTime _lastCursorTime = DateTime.Now;
@@ -46,7 +46,7 @@ public partial class HistoryViewModel : ObservableObject
         _sqlService = sqlService;
         _snackbar = snackbar;
         _i18n = i18n;
-        _searchTimer = new Timer(async _ => await SearchAsync(), null, Timeout.Infinite, Timeout.Infinite);
+        _searchDebouncer = new();
 
         HistoryItems = _items.ToNotifyCollectionChanged();
 
@@ -54,11 +54,13 @@ public partial class HistoryViewModel : ObservableObject
     }
 
     // 搜索文本变化时修改定时器
-    partial void OnSearchTextChanged(string value) => _searchTimer.Change(searchDelayMilliseconds, Timeout.Infinite);
+    partial void OnSearchTextChanged(string value) =>
+        _searchDebouncer.ExecuteAsync(SearchAsync, TimeSpan.FromMilliseconds(searchDelayMilliseconds));
 
     private async Task SearchAsync()
     {
         _searchCts?.Cancel();
+        _searchCts?.Dispose();
         _searchCts = new CancellationTokenSource();
 
         if (string.IsNullOrEmpty(SearchText))
@@ -133,5 +135,11 @@ public partial class HistoryViewModel : ObservableObject
             _isLoading = false;
             LoadMoreCommand.NotifyCanExecuteChanged();
         }
+    }
+
+    public void Dispose()
+    {
+        _searchDebouncer.Dispose();
+        _searchCts?.Dispose();
     }
 }

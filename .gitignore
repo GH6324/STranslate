@@ -15,5 +15,5 @@ publish/
 # rust
 target/
 
+# claude code
 nul
-eudic_api_guide.md

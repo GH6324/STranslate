@@ -124,6 +124,18 @@ public class HeaderControl : Control
                 true,
                 FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
 
+    public ICommand? ScreenshotTranslateCommand
+    {
+        get => (ICommand?)GetValue(ScreenshotTranslateCommandProperty);
+        set => SetValue(ScreenshotTranslateCommandProperty, value);
+    }
+
+    public static readonly DependencyProperty ScreenshotTranslateCommandProperty =
+        DependencyProperty.Register(
+            nameof(ScreenshotTranslateCommand),
+            typeof(ICommand),
+            typeof(HeaderControl));
+
     #endregion
 
     #region ColorScheme
@@ -231,6 +243,71 @@ public class HeaderControl : Control
             nameof(HistoryNextCommand),
             typeof(ICommand),
             typeof(HeaderControl));
+
+    #endregion
+
+    #region OCR
+
+    public bool IsOcrVisible
+    {
+        get => (bool)GetValue(IsOcrVisibleProperty);
+        set => SetValue(IsOcrVisibleProperty, value);
+    }
+
+    public static readonly DependencyProperty IsOcrVisibleProperty =
+        DependencyProperty.Register(
+            nameof(IsOcrVisible),
+            typeof(bool),
+            typeof(HeaderControl),
+            new FrameworkPropertyMetadata(
+                true,
+                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
+
+    public ICommand? OcrCommand
+    {
+        get => (ICommand?)GetValue(OcrCommandProperty);
+        set => SetValue(OcrCommandProperty, value);
+    }
+
+    public static readonly DependencyProperty OcrCommandProperty =
+        DependencyProperty.Register(
+            nameof(OcrCommand),
+            typeof(ICommand),
+            typeof(HeaderControl));
+
+    #endregion
+
+    #region AutoTranslate
+
+    public bool IsAutoTranslate
+    {
+        get => (bool)GetValue(IsAutoTranslateProperty);
+        set => SetValue(IsAutoTranslateProperty, value);
+    }
+
+    public static readonly DependencyProperty IsAutoTranslateProperty =
+        DependencyProperty.Register(
+            nameof(IsAutoTranslate),
+            typeof(bool),
+            typeof(HeaderControl),
+            new FrameworkPropertyMetadata(
+                false,
+                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
+
+    public bool IsAutoTranslateVisible
+    {
+        get => (bool)GetValue(IsAutoTranslateVisibleProperty);
+        set => SetValue(IsAutoTranslateVisibleProperty, value);
+    }
+
+    public static readonly DependencyProperty IsAutoTranslateVisibleProperty =
+        DependencyProperty.Register(
+            nameof(IsAutoTranslateVisible),
+            typeof(bool),
+            typeof(HeaderControl),
+            new FrameworkPropertyMetadata(
+                true,
+                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
 
     #endregion
 

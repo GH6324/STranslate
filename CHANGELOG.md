@@ -1,19 +1,22 @@
 ## 更新
 
-- 修复 sponsor url
+- 添加：为词典插件结果添加标签属性
+- 添加：插件页面添加插件市场跳转按钮
+- 优化：在使用 vLLM + LLM 转换图像时，冗余输出信息的问题。
+- 优化：截图使用体验
+- 优化：Markdown 遵循的浅色和深色主题
+- 优化：托盘右键增加主题感知功能
+- 优化：完善外部调用接口 [https://stranslate.zggsong.com/docs/invoke.html](https://stranslate.zggsong.com/docs/invoke.html)
+- 修复：使用 `curl` 或者 `SnipDo` 调用时所有窗口无法弹出至桌面最上层的问题
+- 修复：截图时主窗口仍有残留的问题
+- 修复：点击谷歌浏览器通知触发刚删除的热键对应功能的问题 #559 #578
 
-## 图片翻译
+## 其他
 
-1. 配置启用文本识别服务
-2. 文本翻译界面直接将服务拖拽到右上角图片翻译栏即可，或者右键服务选择图片翻译
+- [插件市场](https://stranslate.zggsong.com/plugins.html)
+- [使用说明](https://stranslate.zggsong.com/docs/)
+- [集成调用](https://stranslate.zggsong.com/docs/invoke.html)
+- [安装卸载](https://stranslate.zggsong.com/docs/(un)install.html)
+- [FAQ](https://stranslate.zggsong.com/docs/faq.html)
 
-## 插件安装
-
-将spkg文件拖拽至插件页面即可安装
-
-更多插件详见 [https://github.com/STranslate](https://github.com/STranslate)
-
-<img height="540" alt="图片" src="https://github.com/user-attachments/assets/37155712-818b-43ab-bafa-ccbc4900947b" />
-
-
- **完整更新日志:** [2.0.1...2.0.2](https://github.com/STranslate/STranslate/compare/2.0.1...2.0.2)
+ **完整更新日志:** [2.0.3...v2.0.4](https://github.com/STranslate/STranslate/compare/2.0.3...v2.0.4)

@@ -53,3 +53,10 @@ SystemParametersInfo
 SetProcessDpiAwareness
 
 DeleteObject
+
+AttachThreadInput
+GetWindowThreadProcessId
+GetCurrentThreadId
+IsIconic
+ShowWindow
+BringWindowToTop
