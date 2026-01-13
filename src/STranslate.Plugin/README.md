@@ -1,1 +1,17 @@
-Reference this package to develop a plugin for [STranslate](https://github.com/ZGGSONG/STranslate).
+Reference this package to develop a plugin for [STranslate](https://github.com/STranslate/STranslate).
+
+## v1.0.8 - 2026-01-13
+
+- 生词本插件添加 SaveWithNoteAsync 方法，支持保存带笔记的生词（翻译结果作为笔记）
+
+## v1.0.7 - 2026-01-06
+
+- 添加 UrlHelper 类，简化 LLM URL 配置操作
+
+## v1.0.5 - 2025-12-29
+
+- 字典结果添加 Tag 字段
+
+## v1.0.4 - 2025-12-12
+
+- PluginContext 添加 ImageQuality
