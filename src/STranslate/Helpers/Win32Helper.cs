@@ -162,6 +162,21 @@ public static class Win32Helper
 
     #endregion
 
+    #region Window WndProc
+
+    internal static HwndSource? AddWndProcHook(Window window, HwndSourceHook hook)
+    {
+        var hwnd = GetWindowHandle(window, true);
+        var hwndSource = HwndSource.FromHwnd(hwnd);
+        hwndSource?.AddHook(hook);
+        return hwndSource;
+    }
+    private static uint? _taskbarCreatedMessage;
+    internal static uint TaskbarCreatedMessage =>
+        _taskbarCreatedMessage ??= PInvoke.RegisterWindowMessage("TaskbarCreated");
+
+    #endregion
+
     #region Window Fullscreen
 
     /* Flow-Launcher

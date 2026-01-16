@@ -9,7 +9,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:s="https://github.com/zggsong/2022/xaml"
     xmlns:tb="http://www.hardcodet.net/taskbar"
-    xmlns:tray="http://schemas.lepo.co/wpfui/2022/xaml/tray"
     xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
     xmlns:vm="clr-namespace:STranslate.ViewModels"
     Name="STWindow"
@@ -29,6 +28,7 @@
     ui:TitleBar.MinimizeButtonAvailability="Collapsed"
     ui:WindowHelper.SystemBackdropType="Mica"
     ui:WindowHelper.UseModernWindowStyle="True"
+    Closed="OnClosed"
     Icon="/Resources/app.ico"
     Left="{Binding Settings.MainWindowLeft, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
     Loaded="OnLoaded"
@@ -254,21 +254,21 @@
                     CopyPascalCaseCommand="{Binding CopyPascalCaseCommand}"
                     CopySnakeCaseCommand="{Binding CopySnakeCaseCommand}"
                     ExplainCommand="{Binding ExplainCommand}"
+                    HasActivedVocabulary="{Binding VocabularyService.HasActivedVocabulary}"
                     InsertCommand="{Binding InsertCommand}"
                     ItemsSource="{Binding TranslateService.Services}"
                     NavigateCommand="{Binding NavigateCommand}"
                     PlayAudioCommand="{Binding PlayAudioCommand}"
                     PlayAudioUrlCommand="{Binding PlayAudioUrlCommand}"
                     RetryCommand="{Binding SingleTranslateCommand}"
+                    SaveToVocabularyWithNoteCommand="{Binding SaveToVocabularyWithNoteCommand}"
                     ShowBackTranslation="{Binding Settings.ShowBackTranslation}"
                     ShowCamelCase="{Binding Settings.ShowCamelCase}"
                     ShowInsert="{Binding Settings.ShowInsert}"
                     ShowPascalCase="{Binding Settings.ShowPascalCase}"
                     ShowPrompt="{Binding Settings.ShowPromptButton}"
                     ShowSnakeCase="{Binding Settings.ShowSnakeCase}"
-                    TransBackCommand="{Binding SingleTransBackCommand}"
-                    HasActivedVocabulary="{Binding VocabularyService.HasActivedVocabulary}"
-                    SaveToVocabularyWithNoteCommand="{Binding SaveToVocabularyWithNoteCommand}" />
+                    TransBackCommand="{Binding SingleTransBackCommand}" />
             </StackPanel>
         </ui:ScrollViewerEx>
 

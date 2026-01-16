@@ -3,6 +3,8 @@ using STranslate.Core;
 using STranslate.Helpers;
 using STranslate.ViewModels;
 using System.Windows;
+using System.Windows.Interop;
+using System.Windows.Threading;
 
 namespace STranslate.Views;
 
@@ -10,8 +12,8 @@ public partial class MainWindow : IDisposable
 {
     private readonly MainWindowViewModel _viewModel;
     private readonly Settings _settings;
-    // IDisposable
     private bool _disposed = false;
+    private HwndSource? _hwndSource;
 
     public MainWindow()
     {
@@ -28,7 +30,10 @@ public partial class MainWindow : IDisposable
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         _viewModel.UpdatePosition(_settings.HideOnStartup);
+
+        _hwndSource = Win32Helper.AddWndProcHook(this, WndProc);
     }
+
 
     protected override void OnContentRendered(EventArgs e)
     {
@@ -57,6 +62,32 @@ public partial class MainWindow : IDisposable
         base.OnDeactivated(e);
     }
 
+    private void OnClosed(object sender, EventArgs e)
+    {
+        _hwndSource?.RemoveHook(WndProc);
+        _hwndSource = null;
+    }
+
+    private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg == Win32Helper.TaskbarCreatedMessage)
+        {
+            Dispatcher.BeginInvoke(RefreshNotifyIcon, DispatcherPriority.Loaded);
+        }
+        return IntPtr.Zero;
+    }
+
+    private void RefreshNotifyIcon()
+    {
+        var shouldHide = _settings.HideNotifyIcon;
+
+        // 如果配置显示托盘图标，则不需要刷新
+        if (!shouldHide) return;
+
+        _settings.HideNotifyIcon = false;
+        _settings.HideNotifyIcon = shouldHide;
+    }
+
     #region IDisposable
 
     protected virtual void Dispose(bool disposing)
@@ -65,6 +96,7 @@ public partial class MainWindow : IDisposable
         {
             if (disposing)
             {
+                _hwndSource?.Dispose();
                 PART_NotifyIcon.Dispose();
             }
 

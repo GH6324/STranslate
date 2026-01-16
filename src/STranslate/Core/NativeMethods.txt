@@ -60,3 +60,5 @@ GetCurrentThreadId
 IsIconic
 ShowWindow
 BringWindowToTop
+
+RegisterWindowMessage
