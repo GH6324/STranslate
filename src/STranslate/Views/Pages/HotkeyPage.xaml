@@ -75,15 +75,31 @@
                         <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.TextIndentIncrease_20_Regular}" />
                     </ui:SettingsCard.HeaderIcon>
 
-                    <Button Command="{Binding IncrementalTranslateKeyCommand}">
-                        <TextBlock Text="{Binding HotkeySettings.IncrementalTranslateKey, Converter={cnvt:StringConverter}}" />
+                    <Button Command="{Binding IncrementalTranslateKeyCommand}" Content="{Binding HotkeySettings.IncrementalTranslateKey, Converter={cnvt:StringConverter}}">
+                        <Button.ContentTemplate>
+                            <DataTemplate>
+                                <Border
+                                    x:Name="PART_InnerBorder"
+                                    Padding="10,5"
+                                    Background="{DynamicResource {x:Static ui:ThemeKeys.SystemControlBackgroundAccentBrushKey}}"
+                                    BorderThickness="1"
+                                    CornerRadius="5">
+                                    <TextBlock Foreground="{DynamicResource {x:Static ui:ThemeKeys.TextFillColorInverseBrushKey}}" Text="{Binding}" />
+                                </Border>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=IsMouseOver}" Value="True">
+                                        <Setter TargetName="PART_InnerBorder" Property="Background" Value="{DynamicResource SystemAccentColorLight1Brush}" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=IsPressed}" Value="True">
+                                        <Setter TargetName="PART_InnerBorder" Property="Background" Value="{DynamicResource SystemAccentColorDark1Brush}" />
+                                    </DataTrigger>
+                                    <!--<DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=IsRegistered}" Value="True">
+                                        <Setter TargetName="PART_InnerBorder" Property="Background" Value="{DynamicResource {x:Static ui:ThemeKeys.InvalidBrushKey}}" />
+                                    </DataTrigger>-->
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </Button.ContentTemplate>
                     </Button>
-
-                    <!--<ComboBox
-                        DisplayMemberPath="Display"
-                        ItemsSource="{Binding DataProvider.IncrementalTranslateKeys}"
-                        SelectedValue="{Binding HotkeySettings.IncrementalTranslateKey}"
-                        SelectedValuePath="Value" />-->
                 </ui:SettingsCard>
 
                 <control:CardGroup>
