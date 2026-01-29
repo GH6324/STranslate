@@ -93,9 +93,6 @@
                                     <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=IsPressed}" Value="True">
                                         <Setter TargetName="PART_InnerBorder" Property="Background" Value="{DynamicResource SystemAccentColorDark1Brush}" />
                                     </DataTrigger>
-                                    <!--<DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}}, Path=IsRegistered}" Value="True">
-                                        <Setter TargetName="PART_InnerBorder" Property="Background" Value="{DynamicResource {x:Static ui:ThemeKeys.InvalidBrushKey}}" />
-                                    </DataTrigger>-->
                                 </DataTemplate.Triggers>
                             </DataTemplate>
                         </Button.ContentTemplate>
