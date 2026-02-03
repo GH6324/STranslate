@@ -68,6 +68,8 @@
     <sys:String x:Key="General_DoubleClickTrayFunction">Double-Click Tray Function</sys:String>
     <sys:String x:Key="General_DoubleClickTrayFunctionDescription">Selecting any action other than "None" will disable the tray single-click toggle main window display function.</sys:String>
     <sys:String x:Key="General_Language">Language</sys:String>
+    <sys:String x:Key="General_ScreenshotTranslate">Screenshot Translation</sys:String>
+    <sys:String x:Key="General_ImageTranslate">Image Translation</sys:String>
     <sys:String x:Key="General_ShowScreenshotTranslate">Show Screenshot Translation</sys:String>
     <sys:String x:Key="General_ShowScreenshotTranslateDescription">Show "Screenshot Translation" button on the main interface. Take a screenshot, recognize text, fill it into the input box, then perform translation</sys:String>
     <sys:String x:Key="General_ShowImageTranslate">Show Image Translation</sys:String>

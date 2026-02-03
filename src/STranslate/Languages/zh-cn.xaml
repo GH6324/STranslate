@@ -68,6 +68,8 @@
     <sys:String x:Key="General_DoubleClickTrayFunction">双击托盘程序功能</sys:String>
     <sys:String x:Key="General_DoubleClickTrayFunctionDescription">选择除「无操作」的其他操作会禁用托盘单击切换主窗口显示功能</sys:String>
     <sys:String x:Key="General_Language">语言</sys:String>
+    <sys:String x:Key="General_ScreenshotTranslate">截图翻译</sys:String>
+    <sys:String x:Key="General_ImageTranslate">图片翻译</sys:String>
     <sys:String x:Key="General_ShowScreenshotTranslate">显示截图翻译</sys:String>
     <sys:String x:Key="General_ShowScreenshotTranslateDescription">在主界面上显示「截图翻译」按钮，截图并识别结果填充到输入框后执行翻译</sys:String>
     <sys:String x:Key="General_ShowImageTranslate">显示图片翻译</sys:String>

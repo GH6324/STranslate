@@ -68,6 +68,8 @@
     <sys:String x:Key="General_DoubleClickTrayFunction">雙擊托盤功能</sys:String>
     <sys:String x:Key="General_DoubleClickTrayFunctionDescription">選擇除「無操作」的其他操作會停用托盤單擊切換主視窗顯示功能。</sys:String>
     <sys:String x:Key="General_Language">語言</sys:String>
+    <sys:String x:Key="General_ScreenshotTranslate">擷圖翻譯</sys:String>
+    <sys:String x:Key="General_ImageTranslate">圖片翻譯</sys:String>
     <sys:String x:Key="General_ShowScreenshotTranslate">顯示擷圖翻譯</sys:String>
     <sys:String x:Key="General_ShowScreenshotTranslateDescription">在主介面上顯示「擷圖翻譯」按鈕，擷圖並辨識結果填充到輸入框後執行翻譯</sys:String>
     <sys:String x:Key="General_ShowImageTranslate">顯示圖片翻譯</sys:String>
