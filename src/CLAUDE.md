@@ -11,13 +11,13 @@
 ### 构建命令
 ```powershell
 # 构建 Debug 配置
-dotnet build src/STranslate.sln --configuration Debug
+dotnet build STranslate.sln --configuration Debug
 
 # 构建 Release 配置
-dotnet build src/STranslate.sln --configuration Release
+dotnet build STranslate.sln --configuration Release
 
 # 构建特定版本（build.ps1 使用）
-dotnet build src/STranslate.sln --configuration Release /p:Version=2.0.0
+dotnet build STranslate.sln --configuration Release /p:Version=2.0.0
 
 # 运行构建脚本（清理、更新版本、构建、清理）
 ./build.ps1 -Version "2.0.0"
@@ -26,15 +26,14 @@ dotnet build src/STranslate.sln --configuration Release /p:Version=2.0.0
 ### 运行应用程序
 ```powershell
 # 运行 Debug 构建
-dotnet run --project src/STranslate/STranslate.csproj
+dotnet run --project STranslate/STranslate.csproj
 
 # 或构建后直接运行可执行文件
-./src/.artifacts/Debug/STranslate.exe
+./.artifacts/Debug/STranslate.exe
 ```
 
 ### 项目结构
 ```
-src/
 ├── STranslate/                    # 主 WPF 应用程序
 │   ├── Core/                     # 核心服务（PluginManager, ServiceManager 等）
 │   ├── Services/                 # 应用程序服务（TranslateService, OcrService 等）
@@ -179,6 +178,174 @@ Service 创建流程（`ServiceManager.CreateService()`）：
 4. 创建 `PluginContext` 提供给插件
 5. 组装 `Service` 对象，包含 `Plugin`、`MetaData`、`Context` 和 `Options`
 
+### 热键系统
+
+热键系统支持**全局热键**（系统级，即使应用未聚焦也能触发）和**软件内热键**（仅在应用聚焦时生效）。
+
+#### 热键类型
+
+| 类型 | 说明 | 使用场景 |
+|------|------|----------|
+| `GlobalHotkey` | 全局热键，通过 NHotkey.Wpf 注册 | 打开窗口、截图翻译、划词翻译等 |
+| `Hotkey` | 软件内热键，通过 WPF KeyBinding | 窗口内快捷键如 Ctrl+B 自动翻译 |
+| 按住触发键 | 通过低级别键盘钩子实现 | 按住特定键时临时激活功能 |
+
+#### 热键数据结构 (`Core/HotkeyModel.cs`)
+
+```csharp
+public record struct HotkeyModel
+{
+    public bool Alt { get; set; }
+    public bool Shift { get; set; }
+    public bool Win { get; set; }
+    public bool Ctrl { get; set; }
+    public Key CharKey { get; set; } = Key.None;
+
+    // 转换为 ModifierKeys 用于 NHotkey 注册
+    public readonly ModifierKeys ModifierKeys { get; }
+
+    // 从字符串解析（如 "Ctrl + Alt + T"）
+    public HotkeyModel(string hotkeyString)
+
+    // 验证热键有效性
+    public bool Validate(bool validateKeyGestrue = false)
+}
+```
+
+#### 热键设置 (`Core/HotkeySettings.cs`)
+
+```csharp
+public partial class HotkeySettings : ObservableObject
+{
+    // 全局热键
+    public GlobalHotkey OpenWindowHotkey { get; set; } = new("Alt + G");
+    public GlobalHotkey InputTranslateHotkey { get; set; } = new("None");
+    public GlobalHotkey CrosswordTranslateHotkey { get; set; } = new("Alt + D");
+    public GlobalHotkey ScreenshotTranslateHotkey { get; set; } = new("Alt + S");
+    // ... 其他全局热键
+
+    // 软件内热键 - MainWindow
+    public Hotkey OpenSettingsHotkey { get; set; } = new("Ctrl + OemComma");
+    public Hotkey AutoTranslateHotkey { get; set; } = new("Ctrl + B");
+    // ... 其他软件内热键
+}
+```
+
+#### 全局热键注册 (`Helpers/HotkeyMapper.cs`)
+
+全局热键注册使用两种机制：
+
+1. **NHotkey.Wpf**（标准热键）：
+   ```csharp
+   internal static bool SetHotkey(HotkeyModel hotkey, Action action)
+   {
+       HotkeyManager.Current.AddOrReplace(
+           hotkeyStr,
+           hotkey.CharKey,
+           hotkey.ModifierKeys,
+           (_, _) => action.Invoke()
+       );
+   }
+   ```
+
+2. **ChefKeys**（Win 键专用）：
+   ```csharp
+   // LWin/RWin 需要使用 ChefKeys 库
+   if (hotkeyStr is "LWin" or "RWin")
+       return SetWithChefKeys(hotkeyStr, action);
+   ```
+
+3. **低级别键盘钩子**（按住触发）：
+   ```csharp
+   // 使用 SetWindowsHookEx(WH_KEYBOARD_LL) 实现全局按键监听
+   public static void StartGlobalKeyboardMonitoring()
+   {
+       _hookProc = HookCallback;
+       _hookHandle = PInvoke.SetWindowsHookEx(
+           WINDOWS_HOOK_ID.WH_KEYBOARD_LL,
+           _hookProc,
+           hModule,
+           0
+       );
+   }
+   ```
+
+#### 热键注册流程
+
+```
+App.OnStartup()
+→ _hotkeySettings.LazyInitialize()
+   → ApplyCtrlCc()              // 启用/禁用 Ctrl+CC 划词
+   → ApplyIncrementalTranslate() // 启用/禁用增量翻译按键
+   → RegisterHotkeys()          // 注册所有全局热键
+      → HotkeyMapper.SetHotkey() // 每个热键调用 NHotkey
+```
+
+#### 全屏检测与热键屏蔽
+
+```csharp
+private Action WithFullscreenCheck(Action action)
+{
+    return () =>
+    {
+        if (settings.IgnoreHotkeysOnFullscreen &&
+            Win32Helper.IsForegroundWindowFullscreen())
+            return;  // 全屏时忽略热键
+
+        action();
+    };
+}
+```
+
+#### 托盘图标状态
+
+热键状态通过托盘图标反映（优先级从高到低）：
+
+| 状态 | 图标 | 说明 |
+|------|------|------|
+| `NoHotkey` | 禁用热键图标 | 全局热键被禁用 (`DisableGlobalHotkeys=true`) |
+| `IgnoreOnFullScreen` | 全屏忽略图标 | 全屏时忽略热键 (`IgnoreHotkeysOnFullscreen=true`) |
+| `Normal` | 正常图标 | 热键正常工作 |
+| `Dev` | 开发版图标 | Debug 模式下的正常状态 |
+
+#### 热键冲突处理
+
+```csharp
+// 注册前检查热键是否可用
+internal static bool CheckAvailability(HotkeyModel currentHotkey)
+{
+    try
+    {
+        HotkeyManager.Current.AddOrReplace("Test", key, modifiers, ...);
+        return true;  // 可以注册
+    }
+    catch
+    {
+        return false; // 热键被占用
+    }
+}
+
+// 冲突时标记并提示用户
+GlobalHotkey.IsConflict = !HotkeyMapper.SetHotkey(...);
+```
+
+#### 特殊热键功能
+
+1. **Ctrl+CC 划词翻译**：
+   - 监听 Ctrl 键状态，检测快速按两次 C 键
+   - 通过 `CtrlSameCHelper` 实现（使用 `MouseKeyHook` 库）
+   - 支持 `DisableGlobalHotkeys` 和 `IgnoreHotkeysOnFullscreen` 设置
+
+2. **按住触发键**：
+   - 注册按住键：按下时触发 `OnPress`，抬起时触发 `OnRelease`
+   - 用于增量翻译等功能
+   - 支持 `DisableGlobalHotkeys` 和 `IgnoreHotkeysOnFullscreen` 设置
+
+3. **热键编辑控件** (`Controls/HotkeyControl.cs`)：
+   - 自定义 WPF 控件用于热键设置界面
+   - 弹出对话框捕获按键输入
+   - 支持验证和冲突检测
+
 ### 数据流：翻译示例
 
 1. **用户触发翻译**（快捷键、UI）→ `MainWindowViewModel.TranslateCommand`
@@ -261,14 +428,14 @@ Languages/*.xaml     # 可选 i18n 文件
 5. 在 `Services/` 中创建服务类（例如 `MyService.cs`）
 
 ### 修改核心服务
-- **TranslateService**: `src/STranslate/Services/TranslateService.cs`
-- **OcrService**: `src/STranslate/Services/OcrService.cs`
-- **TtsService**: `src/STranslate/Services/TtsService.cs`
-- **VocabularyService**: `src/STranslate/Services/VocabularyService.cs`
+- **TranslateService**: `STranslate/Services/TranslateService.cs`
+- **OcrService**: `STranslate/Services/OcrService.cs`
+- **TtsService**: `STranslate/Services/TtsService.cs`
+- **VocabularyService**: `STranslate/Services/VocabularyService.cs`
 
 ### UI 更改
-- Views 在 `src/STranslate/Views/`
-- ViewModels 在 `src/STranslate/ViewModels/`
+- Views 在 `STranslate/Views/`
+- ViewModels 在 `STranslate/ViewModels/`
 - 使用 CommunityToolkit.Mvvm 进行 MVVM
 - 使用 iNKORE.UI.WPF.Modern 用于现代 UI 组件
 
@@ -321,11 +488,11 @@ Languages/*.xaml     # 可选 i18n 文件
    git clone https://github.com/STranslate/STranslate.git
    cd STranslate
 
-   # 2. 将插件代码放到 src/Plugins/ThirdPlugins/ 目录
-   #    例如：src/Plugins/ThirdPlugins/STranslate.Plugin.Translate.YourPlugin/
+   # 2. 将插件代码放到 Plugins/ThirdPlugins/ 目录
+   #    例如：Plugins/ThirdPlugins/STranslate.Plugin.Translate.YourPlugin/
 
    # 3. 添加到解决方案
-   dotnet sln add src/Plugins/ThirdPlugins/STranslate.Plugin.Translate.YourPlugin/STranslate.Plugin.Translate.YourPlugin/STranslate.Plugin.Translate.YourPlugin.csproj
+   dotnet sln add Plugins/ThirdPlugins/STranslate.Plugin.Translate.YourPlugin/STranslate.Plugin.Translate.YourPlugin/STranslate.Plugin.Translate.YourPlugin.csproj
 
    # 4. 在 Visual Studio 中
    #    - 打开 STranslate.sln
@@ -434,13 +601,19 @@ A: 在 `Languages/` 目录添加 `.xaml` 和 `.json` 文件，通过 `IPluginCon
 
 | 文件 | 用途 |
 |------|---------|
-| `src/STranslate/App.xaml.cs` | 应用程序入口、DI 设置、生命周期 |
-| `src/STranslate/Core/PluginManager.cs` | 插件发现、加载、安装 |
-| `src/STranslate/Core/ServiceManager.cs` | 服务创建、生命周期 |
-| `src/STranslate/Services/BaseService.cs` | 所有服务类型的基础 |
-| `src/STranslate.Plugin/IPlugin.cs` | 核心插件接口 |
-| `src/STranslate.Plugin/PluginMetaData.cs` | 插件元数据模型 |
-| `src/STranslate.Plugin/Service.cs` | 运行时服务实例 |
+| `STranslate/App.xaml.cs` | 应用程序入口、DI 设置、生命周期 |
+| `STranslate/Core/PluginManager.cs` | 插件发现、加载、安装 |
+| `STranslate/Core/ServiceManager.cs` | 服务创建、生命周期 |
+| `STranslate/Services/BaseService.cs` | 所有服务类型的基础 |
+| `STranslate.Plugin/IPlugin.cs` | 核心插件接口 |
+| `STranslate.Plugin/PluginMetaData.cs` | 插件元数据模型 |
+| `STranslate.Plugin/Service.cs` | 运行时服务实例 |
+| `STranslate/Core/HotkeySettings.cs` | 热键配置模型、热键注册管理 |
+| `STranslate/Core/HotkeyModel.cs` | 热键数据结构、解析与验证 |
+| `STranslate/Helpers/HotkeyMapper.cs` | 热键注册、低级别键盘钩子 |
+| `STranslate/Controls/HotkeyControl.cs` | 热键设置自定义控件 |
+| `STranslate/Controls/HotkeyDisplay.cs` | 热键显示自定义控件 |
+| `STranslate/Views/Pages/HotkeyPage.xaml` | 热键设置页面 |
 | `build.ps1` | Release 构建脚本 |
 | `Directory.Packages.props` | 集中式 NuGet 版本 |
 
@@ -465,7 +638,7 @@ A: 在 `Languages/` 目录添加 `.xaml` 和 `.json` 文件，通过 `IPluginCon
 - 所有插件接口都在 `STranslate.Plugin` 项目中，与主应用程序共享
 - 设置使用**原子写入**和备份文件
 - 应用程序支持**便携模式**（创建 `PortableConfig/` 文件夹）
-- 预安装插件在 `src/Plugins/` 并复制到输出
+- 预安装插件在 `Plugins/` 并复制到输出
 - 用户插件位于 `%APPDATA%\STranslate\Plugins\`
 - 插件实例**按服务创建**（非单例）
 - 使用 `IPluginContext` 获取插件功能（不要直接传递应用程序服务）

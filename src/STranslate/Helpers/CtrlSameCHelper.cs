@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.DependencyInjection;
 using Gma.System.MouseKeyHook;
 using STranslate.Core;
 using System.Windows.Forms;
@@ -95,9 +96,39 @@ public static class CtrlSameCHelper
                 // 取消当前的重置任务
                 _debounceExecutor?.Cancel();
 
+                // 检查是否应该跳过热键执行
+                if (ShouldSkipHotkey())
+                    return;
+
                 // 触发事件 (可以在此处 Task.Run 避免阻塞 Hook，取决于外部订阅者的实现)
                 OnCtrlSameC?.Invoke();
             }
         }
+    }
+
+    /// <summary>
+    /// 检查是否应该跳过热键执行（禁用全局热键或全屏时）
+    /// </summary>
+    private static bool ShouldSkipHotkey()
+    {
+        try
+        {
+            var settings = Ioc.Default.GetRequiredService<Settings>();
+
+            // 检查禁用全局热键
+            if (settings.DisableGlobalHotkeys)
+                return true;
+
+            // 检查全屏忽略
+            if (settings.IgnoreHotkeysOnFullscreen &&
+                Win32Helper.IsForegroundWindowFullscreen())
+                return true;
+        }
+        catch
+        {
+            // 如果获取设置失败，默认允许执行
+        }
+
+        return false;
     }
 }

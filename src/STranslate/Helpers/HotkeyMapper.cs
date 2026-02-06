@@ -207,28 +207,32 @@ public class HotkeyMapper
                 // 如果该键已经在按下状态，忽略重复的 KeyDown 事件
                 if (!_pressedKeys.Add(key))
                 {
-                    // 如果是被拦截的键，阻止传递
-                    if (_suppressedKeys.Contains(key))
+                    // 如果是被拦截的键且不跳过，阻止传递
+                    if (_suppressedKeys.Contains(key) && !ShouldSkipHotkey())
                         return new LRESULT(1); // 返回非零值阻止传递
-                    
+
                     return PInvoke.CallNextHookEx(HHOOK.Null, nCode, wParam, lParam);
                 }
 
                 // 执行按住按键的 OnPress 操作
                 if (_holdKeyActions.TryGetValue(key, out var actions))
                 {
-                    try
+                    // 检查是否应该跳过热键执行
+                    if (!ShouldSkipHotkey())
                     {
-                        actions.OnPress?.Invoke();
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Error executing OnPress action for key {Key}", key);
+                        try
+                        {
+                            actions.OnPress?.Invoke();
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Error executing OnPress action for key {Key}", key);
+                        }
                     }
                 }
 
-                // 如果该键在拦截列表中，阻止其传递
-                if (_suppressedKeys.Contains(key))
+                // 如果该键在拦截列表中且不跳过，阻止其传递
+                if (_suppressedKeys.Contains(key) && !ShouldSkipHotkey())
                 {
                     return new LRESULT(1); // 返回非零值阻止按键传递
                 }
@@ -241,18 +245,22 @@ public class HotkeyMapper
                 // 执行按住按键的 OnRelease 操作
                 if (_holdKeyActions.TryGetValue(key, out var actions))
                 {
-                    try
+                    // 检查是否应该跳过热键执行
+                    if (!ShouldSkipHotkey())
                     {
-                        actions.OnRelease?.Invoke();
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Error executing OnRelease action for key {Key}", key);
+                        try
+                        {
+                            actions.OnRelease?.Invoke();
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Error executing OnRelease action for key {Key}", key);
+                        }
                     }
                 }
 
-                // 如果该键在拦截列表中，阻止其传递
-                if (_suppressedKeys.Contains(key))
+                // 如果该键在拦截列表中且不跳过，阻止其传递
+                if (_suppressedKeys.Contains(key) && !ShouldSkipHotkey())
                 {
                     return new LRESULT(1); // 返回非零值阻止按键传递
                 }
@@ -374,6 +382,30 @@ public class HotkeyMapper
         {
             _logger.LogError(e, "Failed to show message box");
         }
+    }
+
+    /// <summary>
+    /// 检查是否应该跳过热键执行（禁用全局热键或全屏时）
+    /// </summary>
+    private static bool ShouldSkipHotkey()
+    {
+        try
+        {
+            var settings = Ioc.Default.GetRequiredService<Settings>();
+
+            if (settings.DisableGlobalHotkeys)
+                return true;
+
+            if (settings.IgnoreHotkeysOnFullscreen &&
+                Win32Helper.IsForegroundWindowFullscreen())
+                return true;
+        }
+        catch
+        {
+            // 忽略异常
+        }
+
+        return false;
     }
 
     #endregion
