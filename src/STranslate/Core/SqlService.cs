@@ -463,33 +463,11 @@ public class HistoryModel
     public override bool Equals(object? obj)
     {
         if (obj is HistoryModel other)
-            return Id == other.Id
-                   && Time == other.Time
-                   && SourceLang == other.SourceLang
-                   && TargetLang == other.TargetLang
-                   && SourceText == other.SourceText
-                   && Favorite == other.Favorite
-                   && Remark == other.Remark
-                   && RawData == other.RawData;
+            return Id == other.Id;  // 仅比较主键
         return false;
     }
 
-    public override int GetHashCode()
-    {
-        unchecked // Overflow is fine, just wrap
-        {
-            var hash = 17;
-            hash = hash * 23 + Id.GetHashCode();
-            hash = hash * 23 + Time.GetHashCode();
-            hash = hash * 23 + SourceLang.GetHashCode();
-            hash = hash * 23 + TargetLang.GetHashCode();
-            hash = hash * 23 + SourceText.GetHashCode();
-            hash = hash * 23 + Favorite.GetHashCode();
-            hash = hash * 23 + (Remark != null ? Remark.GetHashCode() : 0);
-            hash = hash * 23 + (RawData != null ? Data.GetHashCode() : 0);
-            return hash;
-        }
-    }
+    public override int GetHashCode() => Id.GetHashCode();
 
     internal bool HasData(Service svc)
     {

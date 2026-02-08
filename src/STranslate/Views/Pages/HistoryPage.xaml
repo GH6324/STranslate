@@ -18,6 +18,9 @@
     d:DesignHeight="850"
     d:DesignWidth="800"
     mc:Ignorable="d">
+    <ui:Page.InputBindings>
+        <KeyBinding Key="Delete" Command="{Binding DeleteSelectedHistoryCommand}" />
+    </ui:Page.InputBindings>
     <ui:Page.Resources>
         <s:BindingProxy x:Key="VmProxy" Data="{Binding RelativeSource={RelativeSource AncestorType=ui:Page}, Path=DataContext}" />
     </ui:Page.Resources>
@@ -76,9 +79,11 @@
                 <ListBox
                     Grid.Row="1"
                     control:ListBoxScrollBehavior.ScrollAtBottomCommand="{Binding LoadMoreCommand}"
+                    control:ListBoxSelectedItemsBehavior.SelectedItems="{Binding SelectedItems}"
                     Background="Transparent"
                     ItemsSource="{Binding HistoryItems}"
-                    SelectedItem="{Binding SelectedListItem}">
+                    SelectedItem="{Binding SelectedListItem}"
+                    SelectionMode="Extended">
                     <ListBox.ItemContainerStyle>
                         <Style BasedOn="{StaticResource {x:Type ListBoxItem}}" TargetType="ListBoxItem">
                             <Setter Property="Height" Value="40" />
@@ -90,18 +95,11 @@
 
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <DockPanel LastChildFill="True">
-                                <CheckBox
-                                    DockPanel.Dock="Left"
-                                    MinWidth="0"
-                                    VerticalAlignment="Center"
-                                    IsChecked="{Binding IsExportSelected, Mode=TwoWay}" />
-                                <TextBlock
-                                    VerticalAlignment="Center"
-                                    Text="{Binding Model.SourceText}"
-                                    TextTrimming="CharacterEllipsis"
-                                    TextWrapping="NoWrap" />
-                            </DockPanel>
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Text="{Binding SourceText}"
+                                TextTrimming="CharacterEllipsis"
+                                TextWrapping="NoWrap" />
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>

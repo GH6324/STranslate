@@ -6,7 +6,6 @@ using ObservableCollections;
 using STranslate.Core;
 using STranslate.Helpers;
 using STranslate.Plugin;
-using System.ComponentModel;
 using System.IO;
 using System.Text;
 using System.Text.Json;
@@ -37,19 +36,19 @@ public partial class HistoryViewModel : ObservableObject, IDisposable
     /// <summary>
     /// <see href="https://blog.coldwind.top/posts/more-observable-collections/"/>
     /// </summary>
-    private readonly ObservableList<HistoryListItem> _items = [];
+    private readonly ObservableList<HistoryModel> _items = [];
 
-    public INotifyCollectionChangedSynchronizedViewList<HistoryListItem> HistoryItems { get; }
+    public INotifyCollectionChangedSynchronizedViewList<HistoryModel> HistoryItems { get; }
 
-    [ObservableProperty] public partial HistoryListItem? SelectedListItem { get; set; }
+    [ObservableProperty] public partial HistoryModel? SelectedListItem { get; set; }
+
+    [ObservableProperty] public partial ObservableList<object> SelectedItems { get; set; } = [];
 
     [ObservableProperty] public partial HistoryModel? SelectedItem { get; set; }
 
     [ObservableProperty] public partial long TotalCount { get; set; }
 
-    [ObservableProperty] public partial int ExportSelectedCount { get; set; }
-
-    [ObservableProperty] public partial bool CanExportHistory { get; set; }
+    public bool CanExportHistory => SelectedItems.Count > 0;
 
     public HistoryViewModel(
         SqlService sqlService,
@@ -62,11 +61,12 @@ public partial class HistoryViewModel : ObservableObject, IDisposable
         _searchDebouncer = new();
 
         HistoryItems = _items.ToNotifyCollectionChanged();
+        SelectedItems.CollectionChanged += (in NotifyCollectionChangedEventArgs<object> _) => OnPropertyChanged(nameof(CanExportHistory));
 
         _ = RefreshAsync();
     }
 
-    partial void OnSelectedListItemChanged(HistoryListItem? value) => SelectedItem = value?.Model;
+    partial void OnSelectedListItemChanged(HistoryModel? value) => SelectedItem = value;
 
     // 搜索文本变化时修改定时器
     partial void OnSearchTextChanged(string value) =>
@@ -116,12 +116,23 @@ public partial class HistoryViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task DeleteAsync(HistoryModel historyModel)
     {
+        if (await new ContentDialog
+        {
+            Title = _i18n.GetTranslation("Prompt"),
+            CloseButtonText = _i18n.GetTranslation("Cancel"),
+            PrimaryButtonText = _i18n.GetTranslation("Confirm"),
+            DefaultButton = ContentDialogButton.Primary,
+            Content = string.Format(_i18n.GetTranslation("BatchDeleteHistoryConfirm"), "1"),
+        }.ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
         var success = await _sqlService.DeleteDataAsync(historyModel);
         if (success)
         {
             App.Current.Dispatcher.Invoke(() =>
             {
-                var item = _items.FirstOrDefault(i => i.Model.Id == historyModel.Id);
+                var item = _items.FirstOrDefault(i => i.Id == historyModel.Id);
                 if (item != null)
                     RemoveItem(item);
                 if (SelectedItem?.Id == historyModel.Id)
@@ -158,7 +169,7 @@ public partial class HistoryViewModel : ObservableObject, IDisposable
             {
                 // 更新游标
                 _lastCursorTime = historyData.Last().Time;
-                var uniqueHistoryItems = historyData.Where(h => !_items.Any(existing => existing.Model.Id == h.Id));
+                var uniqueHistoryItems = historyData.Where(h => !_items.Any(existing => existing.Id == h.Id));
                 AddItems(uniqueHistoryItems);
             });
         }
@@ -174,20 +185,19 @@ public partial class HistoryViewModel : ObservableObject, IDisposable
     {
         if (_items.Count == 0) return;
 
-        var shouldSelectAll = _items.Any(i => !i.IsExportSelected);
-        foreach (var item in _items)
-            item.IsExportSelected = shouldSelectAll;
-
-        UpdateExportSelectionState();
+        if (SelectedItems.Count == _items.Count)
+            SelectedItems.Clear();
+        else
+        {
+            SelectedItems.Clear();
+            SelectedItems.AddRange(_items);
+        }
     }
 
     [RelayCommand]
     private async Task ExportHistoryAsync()
     {
-        var selected = _items
-            .Where(i => i.IsExportSelected)
-            .Select(i => i.Model)
-            .ToList();
+        var selected = SelectedItems.Cast<HistoryModel>().ToList();
 
         if (selected.Count == 0)
         {
@@ -237,9 +247,7 @@ public partial class HistoryViewModel : ObservableObject, IDisposable
             var directory = Path.GetDirectoryName(saveFileDialog.FileName);
             _snackbar.ShowSuccess(_i18n.GetTranslation("ExportSuccess"));
 
-            foreach (var item in _items)
-                item.IsExportSelected = false;
-            UpdateExportSelectionState();
+            SelectedItems.Clear();
         }
         catch (Exception ex)
         {
@@ -250,7 +258,7 @@ public partial class HistoryViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task DeleteSelectedHistoryAsync()
     {
-        var selected = _items.Where(i => i.IsExportSelected).ToList();
+        var selected = SelectedItems.Cast<HistoryModel>().ToList();
         if (selected.Count == 0)
         {
             _snackbar.Show(
@@ -275,7 +283,7 @@ public partial class HistoryViewModel : ObservableObject, IDisposable
 
         var totalCountBefore = TotalCount;
         foreach (var item in selected)
-            await DeleteAsync(item.Model);
+            await DeleteAsync(item);
 
         if (TotalCount == totalCountBefore - selected.Count)
             _snackbar.ShowSuccess(_i18n.GetTranslation("OperationSuccess"));
@@ -283,38 +291,19 @@ public partial class HistoryViewModel : ObservableObject, IDisposable
 
     private void AddItems(IEnumerable<HistoryModel> models)
     {
-        var listItems = models.Select(m => new HistoryListItem(m)).ToList();
-        foreach (var item in listItems)
-            item.PropertyChanged += OnHistoryListItemPropertyChanged;
-        _items.AddRange(listItems);
-        UpdateExportSelectionState();
+        _items.AddRange(models);
     }
 
-    private void RemoveItem(HistoryListItem item)
+    private void RemoveItem(HistoryModel item)
     {
-        item.PropertyChanged -= OnHistoryListItemPropertyChanged;
         _items.Remove(item);
-        UpdateExportSelectionState();
+        SelectedItems.Remove(item);
     }
 
     private void ClearItems()
     {
-        foreach (var item in _items)
-            item.PropertyChanged -= OnHistoryListItemPropertyChanged;
         _items.Clear();
-        UpdateExportSelectionState();
-    }
-
-    private void OnHistoryListItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(HistoryListItem.IsExportSelected))
-            UpdateExportSelectionState();
-    }
-
-    private void UpdateExportSelectionState()
-    {
-        ExportSelectedCount = _items.Count(i => i.IsExportSelected);
-        CanExportHistory = ExportSelectedCount > 0;
+        SelectedItems.Clear();
     }
 
     public void Dispose()
@@ -322,13 +311,4 @@ public partial class HistoryViewModel : ObservableObject, IDisposable
         _searchDebouncer.Dispose();
         _searchCts?.Dispose();
     }
-}
-
-public partial class HistoryListItem : ObservableObject
-{
-    public HistoryModel Model { get; }
-
-    [ObservableProperty] public partial bool IsExportSelected { get; set; }
-
-    public HistoryListItem(HistoryModel model) => Model = model;
 }
