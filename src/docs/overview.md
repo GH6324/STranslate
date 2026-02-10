@@ -45,13 +45,13 @@
 
 ```powershell
 # 构建 Debug 配置
-dotnet build STranslate.sln --configuration Debug
+dotnet build STranslate.slnx --configuration Debug
 
 # 构建 Release 配置
-dotnet build STranslate.sln --configuration Release
+dotnet build STranslate.slnx --configuration Release
 
 # 构建特定版本（build.ps1 使用）
-dotnet build STranslate.sln --configuration Release /p:Version=2.0.0
+dotnet build STranslate.slnx --configuration Release /p:Version=2.0.0
 
 # 运行构建脚本（清理、更新版本、构建、清理）
 ./build.ps1 -Version "2.0.0"

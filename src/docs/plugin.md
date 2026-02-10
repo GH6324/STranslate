@@ -141,7 +141,7 @@ cd STranslate
 dotnet sln add Plugins/ThirdPlugins/STranslate.Plugin.Translate.YourPlugin/STranslate.Plugin.Translate.YourPlugin/STranslate.Plugin.Translate.YourPlugin.csproj
 
 # 4. 在 Visual Studio 中
-#    - 打开 STranslate.sln
+#    - 打开 STranslate.slnx
 #    - 设置 STranslate 为启动项目
 #    - 配置 Debug 模式
 #    - 右键插件项目 → 编译

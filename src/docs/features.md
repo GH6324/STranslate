@@ -263,7 +263,9 @@ public class ClipboardMonitor : IDisposable
 
 1. **全局热键**: `Alt + Shift + A`（默认）- 在任何地方切换监听状态
 2. **主窗口按钮**: HeaderControl 中的切换按钮，带状态指示（IsOn/IsOff）
-3. **设置项**: `Settings.IsClipboardMonitorVisible` 控制按钮是否显示
+3. **设置项**:
+   - `Settings.IsClipboardMonitorVisible` - 控制主界面按钮是否显示（默认 `true`）
+   - `Settings.ClipboardMonitorHotkey` - 全局热键配置（默认 `Alt + Shift + A`）
 
 ### 状态通知
 
@@ -296,7 +298,9 @@ _ = Task.Run(async () =>
 | 文件 | 用途 |
 |------|---------|
 | `STranslate/Helpers/ClipboardMonitor.cs` | 剪贴板监听实现（Win32 API） |
-| `STranslate/Views/HeaderControl.xaml` | 主窗口标题栏按钮 |
+| `STranslate/Controls/HeaderControl.xaml` | 主窗口标题栏控件模板（含剪贴板监听按钮） |
+| `STranslate/Controls/HeaderControl.cs` | 主窗口标题栏控件逻辑 |
+| `STranslate/Core/Settings.cs` | `IsClipboardMonitorVisible` 设置项 |
 
 ## 历史记录功能
 
@@ -427,6 +431,20 @@ private async Task DeleteSelectedHistoryAsync()
 }
 ```
 
+#### 多选行为优化 (`ListBoxSelectedItemsBehavior`)
+
+使用附加行为实现 ListBox 多选与 ViewModel 的双向绑定：
+
+```csharp
+// XAML 中使用附加属性绑定多选
+<ListBox behaviors:ListBoxSelectedItemsBehavior.SelectedItems="{Binding SelectedItems}" />
+```
+
+**优化内容**:
+- 使用 `ObservableList<object>` 实现选中项的响应式集合
+- 自动同步 UI 选中状态与 ViewModel 数据
+- 避免传统事件处理方式中的内存泄漏问题
+
 ### 分页机制
 
 #### 游标分页优势
@@ -453,3 +471,4 @@ private bool CanLoadMore =>
 | `STranslate/Views/Pages/HistoryPage.xaml` | 历史记录页面 UI |
 | `STranslate/Models/HistoryModel.cs` | 历史记录数据模型 |
 | `STranslate/Services/SqlService.cs` | SQLite 数据库服务 |
+| `STranslate/Controls/ListBoxSelectedItemsBehavior.cs` | ListBox 多选行为附加属性 |

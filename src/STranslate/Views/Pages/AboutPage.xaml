@@ -44,8 +44,14 @@
                         <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.Toolbox_24_Regular}" />
                     </ui:SettingsCard.HeaderIcon>
                     <ikw:SimpleStackPanel Orientation="Horizontal" Spacing="12">
-                        <Button Content="{DynamicResource ClearCache}" IsEnabled="False" />
-                        <Button Content="{DynamicResource ClearLogs}" IsEnabled="False" />
+                        <Button
+                            Content="{DynamicResource ClearCache}"
+                            IsEnabled="False"
+                            Visibility="Collapsed" />
+                        <Button
+                            Content="{DynamicResource ClearLogs}"
+                            IsEnabled="False"
+                            Visibility="Collapsed" />
                         <Button>
                             <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.FolderSearch_24_Regular}" />
                             <ui:FlyoutService.Flyout>

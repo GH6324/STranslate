@@ -14,7 +14,7 @@
 dotnet run --project STranslate/STranslate.csproj
 
 # 或构建后运行
-dotnet build STranslate.sln --configuration Debug
+dotnet build STranslate.slnx --configuration Debug
 ./.artifacts/Debug/STranslate.exe
 ```
 

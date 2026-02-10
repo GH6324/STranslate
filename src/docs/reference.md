@@ -35,6 +35,10 @@
 | 文件 | 用途 |
 |------|------|
 | `STranslate/Helpers/ClipboardMonitor.cs` | 剪贴板监听实现（Win32 API） |
+| `STranslate/Controls/ListBoxSelectedItemsBehavior.cs` | ListBox 多选行为附加属性 |
+| `STranslate/Controls/HeaderControl.xaml` | 主窗口标题栏控件模板 |
+| `STranslate/Controls/OutputControl.xaml` | 输出区域控件模板（含 TTS 按钮） |
+| `STranslate/Controls/InputControl.xaml` | 输入区域控件模板（含 TTS 按钮） |
 
 ### 构建与配置
 
