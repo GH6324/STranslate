@@ -214,14 +214,15 @@
                                                 </TextBlock.Text>
                                             </TextBlock>
 
-                                            <!--  操作按钮  -->
+                                            <!--  操作按钮（下载/升级/已安装）  -->
                                             <Button
                                                 MinWidth="70"
                                                 Padding="10,5"
                                                 Command="{Binding Data.DownloadPluginCommand, Source={StaticResource ViewModelProxy}}"
                                                 CommandParameter="{Binding}"
                                                 Content="{Binding ActionStatus, Converter={cnvt:PluginActionStatusToStringConverter}}"
-                                                IsEnabled="{Binding ActionStatus, Converter={cnvt:PluginActionStatusToBoolConverter}}">
+                                                IsEnabled="{Binding ActionStatus, Converter={cnvt:PluginActionStatusToBoolConverter}}"
+                                                Visibility="{Binding IsDownloading, Converter={cnvt:BoolToVisibilityInverseConverter}}">
                                                 <Button.Style>
                                                     <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="Button">
                                                         <Setter Property="IsEnabled" Value="True" />
@@ -240,14 +241,19 @@
                                                                 <Setter Property="Background" Value="{DynamicResource {x:Static ui:ThemeKeys.SystemControlBackgroundAccentBrushKey}}" />
                                                                 <Setter Property="Foreground" Value="{DynamicResource {x:Static ui:ThemeKeys.TextOnAccentFillColorPrimaryBrushKey}}" />
                                                             </DataTrigger>
-
-                                                            <DataTrigger Binding="{Binding IsDownloading}" Value="True">
-                                                                <Setter Property="IsEnabled" Value="False" />
-                                                            </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
                                                 </Button.Style>
                                             </Button>
+
+                                            <!--  取消按钮（下载中显示）  -->
+                                            <Button
+                                                MinWidth="70"
+                                                Padding="10,5"
+                                                Command="{Binding Data.CancelDownloadCommand, Source={StaticResource ViewModelProxy}}"
+                                                CommandParameter="{Binding}"
+                                                Content="{DynamicResource Cancel}"
+                                                Visibility="{Binding IsDownloading, Converter={cnvt:BoolToVisibilityConverter}}" />
                                         </ikw:SimpleStackPanel>
 
                                         <!--  下载进度条  -->

@@ -201,6 +201,7 @@
     <sys:String x:Key="PluginMarketNoPlugins">プラグインがありません</sys:String>
     <sys:String x:Key="PluginMarketCurrentVersion">現在のバージョン</sys:String>
     <sys:String x:Key="PluginMarketLatestVersion">最新バージョン</sys:String>
+    <sys:String x:Key="PluginDownloadCancelled">ダウンロードがキャンセルされました</sys:String>
 
     <sys:String x:Key="Network_EnableExternalCall">外部呼び出しを有効化</sys:String>
     <sys:String x:Key="Network_EnableExternalCallDescription">外部呼び出し機能の有効/無効化</sys:String>

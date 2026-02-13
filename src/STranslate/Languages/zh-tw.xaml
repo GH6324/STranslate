@@ -207,6 +207,7 @@
     <sys:String x:Key="PluginMarketNoPlugins">暫無插件</sys:String>
     <sys:String x:Key="PluginMarketCurrentVersion">目前版本</sys:String>
     <sys:String x:Key="PluginMarketLatestVersion">最新版本</sys:String>
+    <sys:String x:Key="PluginDownloadCancelled">下載已取消</sys:String>
 
     <!--  // Network Page //  -->
     <sys:String x:Key="Network_EnableExternalCall">啟用外部呼叫</sys:String>

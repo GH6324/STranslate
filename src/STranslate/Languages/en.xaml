@@ -207,6 +207,7 @@
     <sys:String x:Key="PluginMarketNoPlugins">No plugins available</sys:String>
     <sys:String x:Key="PluginMarketCurrentVersion">Current Version</sys:String>
     <sys:String x:Key="PluginMarketLatestVersion">Latest Version</sys:String>
+    <sys:String x:Key="PluginDownloadCancelled">Download cancelled</sys:String>
 
     <!--  // Network Page //  -->
     <sys:String x:Key="Network_EnableExternalCall">Enable external call</sys:String>

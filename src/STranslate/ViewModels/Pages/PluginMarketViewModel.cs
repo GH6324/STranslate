@@ -278,10 +278,14 @@ public partial class PluginMarketViewModel : ObservableObject
 
     #region 下载和安装
 
-    [RelayCommand]
+    [RelayCommand(AllowConcurrentExecutions = true)]
     private async Task DownloadPluginAsync(PluginMarketInfo plugin)
     {
-        if (plugin.IsDownloading) return;
+        if (plugin.IsDownloading || plugin.ActionStatus == PluginActionStatus.Installed) return;
+
+        // 创建新的取消令牌源
+        plugin.CancellationTokenSource = new CancellationTokenSource();
+        var cancellationToken = plugin.CancellationTokenSource.Token;
 
         plugin.IsDownloading = true;
         plugin.DownloadProgress = 0;
@@ -299,9 +303,12 @@ public partial class PluginMarketViewModel : ObservableObject
                 plugin.DownloadStatus = $"{p.Percentage:F0}% ({p.Speed / 1024:F0} KB/s)";
             });
 
-            // 下载文件
+            // 下载文件（支持取消）
             var downloadedPath = await _httpService.DownloadFileAsync(
-                plugin.DownloadUrl, tempPath, fileName, progress: progress);
+                plugin.DownloadUrl, tempPath, fileName, progress: progress, cancellationToken: cancellationToken);
+
+            // 检查是否已取消
+            cancellationToken.ThrowIfCancellationRequested();
 
             // 转换为 .spkg 临时文件
             var spkgPath = Path.ChangeExtension(downloadedPath, ".spkg");
@@ -315,6 +322,10 @@ public partial class PluginMarketViewModel : ObservableObject
             // 处理安装结果
             await HandleInstallResultAsync(plugin, result, spkgPath);
         }
+        catch (OperationCanceledException)
+        {
+            _snackbar.ShowWarning($"{_i18n.GetTranslation("PluginDownloadCancelled")}");
+        }
         catch (Exception ex)
         {
             _snackbar.ShowError($"{_i18n.GetTranslation("PluginInstallFailed")}: {ex.Message}");
@@ -323,6 +334,17 @@ public partial class PluginMarketViewModel : ObservableObject
         {
             plugin.IsDownloading = false;
             plugin.DownloadStatus = null;
+            plugin.CancellationTokenSource?.Dispose();
+            plugin.CancellationTokenSource = null;
+        }
+    }
+
+    [RelayCommand]
+    private void CancelDownload(PluginMarketInfo plugin)
+    {
+        if (plugin.CancellationTokenSource != null && !plugin.CancellationTokenSource.IsCancellationRequested)
+        {
+            plugin.CancellationTokenSource.Cancel();
         }
     }
 
@@ -625,6 +647,11 @@ public partial class PluginMarketInfo : ObservableObject
     /// </summary>
     [ObservableProperty]
     public partial string? DownloadStatus { get; set; }
+
+    /// <summary>
+    /// 取消令牌源（用于取消下载）
+    /// </summary>
+    public CancellationTokenSource? CancellationTokenSource { get; set; }
 
     /// <summary>
     /// 是否可以升级
