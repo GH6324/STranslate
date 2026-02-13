@@ -185,10 +185,6 @@ public partial class App : ISingleInstanceApp, INavigation, IDisposable
         // 注册编码提供程序以支持 GBK 等编码
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-        // 配置 CachedImage 缓存目录
-        CachedImage.FileCache.AppCacheMode = CachedImage.FileCache.CacheMode.Dedicated;
-        CachedImage.FileCache.AppCacheDirectory = DataLocation.CacheDirectory;
-
         _logger = Ioc.Default.GetRequiredService<ILogger<App>>();
         _logger.LogInformation("Begin STranslate startup ----------------------------------------------------");
 

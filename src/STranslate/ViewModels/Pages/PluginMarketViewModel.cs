@@ -598,6 +598,7 @@ public partial class PluginMarketInfo : ObservableObject
     /// 是否已安装
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ActionStatus))]
     public partial bool IsInstalled { get; set; }
 
     /// <summary>
@@ -610,6 +611,7 @@ public partial class PluginMarketInfo : ObservableObject
     /// 是否下载中
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ActionStatus))]
     public partial bool IsDownloading { get; set; }
 
     /// <summary>
@@ -628,6 +630,7 @@ public partial class PluginMarketInfo : ObservableObject
     /// 是否可以升级
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ActionStatus))]
     public partial bool CanUpgrade { get; set; }
 
     /// <summary>

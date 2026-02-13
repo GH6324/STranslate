@@ -188,7 +188,9 @@
                                         <cachedImage:Image
                                             Width="32"
                                             Height="32"
-                                            ImageUrl="{Binding IconUrl}" />
+                                            ImageUrl="{Binding IconUrl}"
+                                            RenderOptions.BitmapScalingMode="HighQuality"
+                                            UseLayoutRounding="True" />
                                     </ui:SettingsCard.HeaderIcon>
 
                                     <StackPanel>
