@@ -155,10 +155,23 @@
                                     Visibility="{Binding Data.IsMultiSelectMode, Source={StaticResource ViewModelProxy}, Converter={cnvt:BoolToVisibilityConverter}}">
                                     <CheckBox.Style>
                                         <Style BasedOn="{StaticResource {x:Type CheckBox}}" TargetType="CheckBox">
+                                            <Setter Property="Width" Value="0" />
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Data.IsMultiSelectMode, Source={StaticResource ViewModelProxy}}" Value="True">
+                                                <!--  多选模式且（未安装或可升级）时显示  -->
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding Data.IsMultiSelectMode, Source={StaticResource ViewModelProxy}}" Value="True" />
+                                                        <Condition Binding="{Binding IsInstalled}" Value="False" />
+                                                    </MultiDataTrigger.Conditions>
                                                     <Setter Property="Width" Value="Auto" />
-                                                </DataTrigger>
+                                                </MultiDataTrigger>
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding Data.IsMultiSelectMode, Source={StaticResource ViewModelProxy}}" Value="True" />
+                                                        <Condition Binding="{Binding CanUpgrade}" Value="True" />
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Width" Value="Auto" />
+                                                </MultiDataTrigger>
                                             </Style.Triggers>
                                         </Style>
                                     </CheckBox.Style>

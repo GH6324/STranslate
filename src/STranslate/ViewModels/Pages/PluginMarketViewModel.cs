@@ -93,9 +93,25 @@ public partial class PluginMarketViewModel : ObservableObject
     partial void OnSelectedPluginTypeChanged(PluginType value) => _pluginsCollectionView.View?.Refresh();
 
     /// <summary>
+    /// 插件属性变化处理
+    /// </summary>
+    private void OnPluginPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(PluginMarketInfo.IsSelected))
+        {
+            NotifySelectedCountChanged();
+        }
+    }
+
+    /// <summary>
     /// 已选中插件数量
     /// </summary>
     public int SelectedCount => Plugins.Count(p => p.IsSelected);
+
+    /// <summary>
+    /// 通知选中数量变更
+    /// </summary>
+    private void NotifySelectedCountChanged() => OnPropertyChanged(nameof(SelectedCount));
 
     #endregion
 
@@ -129,7 +145,8 @@ public partial class PluginMarketViewModel : ObservableObject
             // 3. 添加到集合
             foreach (var plugin in plugins.Where(p => p != null))
             {
-                Plugins.Add(plugin!);
+                plugin!.PropertyChanged += OnPluginPropertyChanged;
+                Plugins.Add(plugin);
             }
 
             // 4. 更新安装状态
@@ -336,9 +353,9 @@ public partial class PluginMarketViewModel : ObservableObject
                 if (_pluginService.UpgradePlugin(result.ExistingPlugin, spkgPath))
                 {
                     _needsRestart = true;
-                    plugin.CanUpgrade = false;
-                    plugin.InstalledVersion = plugin.Version;
                     _snackbar.ShowSuccess(_i18n.GetTranslation("PluginInstallSuccess"));
+                    // 刷新所有插件的安装状态
+                    UpdatePluginStatus();
                 }
                 else
                 {
@@ -359,10 +376,9 @@ public partial class PluginMarketViewModel : ObservableObject
         else
         {
             // 安装成功
-            plugin.IsInstalled = true;
-            plugin.CanUpgrade = false;
-            plugin.InstalledVersion = plugin.Version;
             _snackbar.ShowSuccess(_i18n.GetTranslation("PluginInstallSuccess"));
+            // 刷新所有插件的安装状态
+            UpdatePluginStatus();
         }
 
         // 清理临时文件
