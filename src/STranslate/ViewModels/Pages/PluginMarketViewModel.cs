@@ -39,7 +39,7 @@ public partial class PluginMarketViewModel : ObservableObject
     /// <summary>
     /// 插件市场 JSON 数据源 URL
     /// </summary>
-    private const string PluginsJsonUrl = "https://raw.githubusercontent.com/STranslate/STranslate-doc/refs/heads/main/vitepress/plugins.json";
+    private const string PluginsJsonUrl = "https://fastly.jsdelivr.net/gh/STranslate/STranslate-doc@main/vitepress/plugins.json";
 
     /// <summary>
     /// 是否需要重启（有升级操作时）
@@ -183,8 +183,8 @@ public partial class PluginMarketViewModel : ObservableObject
 
             var type = nameParts[2]; // Translate, Ocr, Tts, Vocabulary
 
-            // 构建 plugin.json URL
-            var pluginJsonUrl = $"https://raw.githubusercontent.com/{author}/{packageName}/main/{packageName}/plugin.json";
+            // 构建 plugin.json URL (使用 JsDelivr CDN 加速)
+            var pluginJsonUrl = $"https://fastly.jsdelivr.net/gh/{author}/{packageName}@main/{packageName}/plugin.json";
 
             // 获取插件详细信息
             var pluginInfo = await _httpService.GetAsync<PluginInfo>(pluginJsonUrl);
@@ -202,7 +202,7 @@ public partial class PluginMarketViewModel : ObservableObject
                 Version = pluginInfo.Version ?? "1.0.0",
                 Description = pluginInfo.Description ?? string.Empty,
                 Website = pluginInfo.Website ?? $"https://github.com/{author}/{packageName}",
-                IconUrl = $"https://raw.githubusercontent.com/{author}/{packageName}/main/{packageName}/icon.png",
+                IconUrl = $"https://fastly.jsdelivr.net/gh/{author}/{packageName}@main/{packageName}/icon.png",
                 DownloadUrl = downloadUrl,
                 PackageName = packageName
             };
