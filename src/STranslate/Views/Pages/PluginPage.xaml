@@ -54,6 +54,8 @@
             <Setter Property="LineHeight" Value="16" />
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
             <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="ToolTip" Value="{Binding Description}" />
+            <Setter Property="ToolTipService.InitialShowDelay" Value="200" />
         </Style>
 
         <!--  插件元信息文本样式  -->
@@ -102,6 +104,284 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+
+        <!--  已安装插件 DataTemplate  -->
+        <DataTemplate x:Key="InstalledPluginTemplate" DataType="plugin:PluginMetaData">
+            <Border Style="{StaticResource CardBorderStyle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Image
+                        Grid.Column="0"
+                        Width="32"
+                        Height="32"
+                        VerticalAlignment="Center"
+                        Source="{Binding IconPath}"
+                        Stretch="Uniform" />
+
+                    <Grid Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" MinHeight="20" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock
+                                Grid.Column="0"
+                                Style="{StaticResource PluginNameStyle}"
+                                Text="{Binding Name}" />
+
+                            <ikw:SimpleStackPanel
+                                Grid.Column="1"
+                                Margin="8,0,0,0"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal"
+                                Spacing="8">
+                                <TextBlock
+                                    Style="{StaticResource ActionIconStyle}"
+                                    Text="&#xF480;"
+                                    ToolTip="{DynamicResource PluginActionWebsite}">
+                                    <TextBlock.InputBindings>
+                                        <MouseBinding
+                                            Command="{Binding Source={StaticResource ViewModelProxy}, Path=Data.OpenOfficialLinkCommand}"
+                                            CommandParameter="{Binding Website}"
+                                            MouseAction="LeftClick" />
+                                    </TextBlock.InputBindings>
+                                </TextBlock>
+                                <TextBlock
+                                    IsEnabled="{Binding IsPrePlugin, Converter={cnvt:BoolInverseConverter}}"
+                                    Style="{StaticResource ActionIconStyle}"
+                                    Text="&#xF34C;"
+                                    ToolTip="{DynamicResource Delete}">
+                                    <TextBlock.InputBindings>
+                                        <MouseBinding
+                                            Command="{Binding Source={StaticResource ViewModelProxy}, Path=Data.DeletePluginCommand}"
+                                            CommandParameter="{Binding}"
+                                            MouseAction="LeftClick" />
+                                    </TextBlock.InputBindings>
+                                </TextBlock>
+                                <TextBlock
+                                    Style="{StaticResource ActionIconStyle}"
+                                    Text="&#xF418;"
+                                    ToolTip="{DynamicResource OpenDirectory}">
+                                    <TextBlock.InputBindings>
+                                        <MouseBinding
+                                            Command="{Binding Source={StaticResource ViewModelProxy}, Path=Data.OpenPluginDirectoryCommand}"
+                                            CommandParameter="{Binding}"
+                                            MouseAction="LeftClick" />
+                                    </TextBlock.InputBindings>
+                                </TextBlock>
+                            </ikw:SimpleStackPanel>
+                        </Grid>
+
+                        <TextBlock
+                            Grid.Row="1"
+                            Style="{StaticResource PluginDescriptionStyle}"
+                            Text="{Binding Description}" />
+
+                        <TextBlock
+                            Grid.Row="2"
+                            Margin="0,6,0,0"
+                            Style="{StaticResource PluginMetaStyle}">
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="{}{0} · v{1}">
+                                    <Binding Path="Author" />
+                                    <Binding Path="Version" />
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </Grid>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!--  插件市场 DataTemplate  -->
+        <DataTemplate x:Key="MarketPluginTemplate" DataType="vm:PluginMarketInfo">
+            <Border Style="{StaticResource CardBorderStyle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Image
+                        Grid.Column="0"
+                        Width="32"
+                        Height="32"
+                        VerticalAlignment="Center"
+                        Source="{Binding IconUrl}"
+                        Stretch="Uniform" />
+
+                    <Grid Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" MinHeight="20" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock
+                                Grid.Column="0"
+                                Style="{StaticResource PluginNameStyle}"
+                                Text="{Binding Name}" />
+
+                            <ikw:SimpleStackPanel
+                                Grid.Column="1"
+                                Margin="8,0,0,0"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal"
+                                Spacing="8">
+                                <ikw:SimpleStackPanel.Resources>
+                                    <Style
+                                        x:Key="DownloadIconStyle"
+                                        BasedOn="{StaticResource MarketActionIconStyle}"
+                                        TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#0078D4" />
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Foreground" Value="#106EBE" />
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                    <Style
+                                        x:Key="UpgradeIconStyle"
+                                        BasedOn="{StaticResource MarketActionIconStyle}"
+                                        TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#E74856" />
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Foreground" Value="#F1707A" />
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                    <Style
+                                        x:Key="StatusIconStyle"
+                                        BasedOn="{StaticResource IconButtonStyle}"
+                                        TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{DynamicResource {x:Static ui:ThemeKeys.TextFillColorDisabledBrushKey}}" />
+                                    </Style>
+                                    <Style
+                                        x:Key="PendingIconStyle"
+                                        BasedOn="{StaticResource IconButtonStyle}"
+                                        TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#FF8C00" />
+                                        <Setter Property="Opacity" Value="0.8" />
+                                    </Style>
+                                </ikw:SimpleStackPanel.Resources>
+
+                                <TextBlock
+                                    Style="{StaticResource MarketActionIconStyle}"
+                                    Text="&#xF480;"
+                                    ToolTip="{DynamicResource PluginActionWebsite}">
+                                    <TextBlock.InputBindings>
+                                        <MouseBinding
+                                            Command="{Binding Data.OpenOfficialLinkCommand, Source={StaticResource ViewModelProxy}}"
+                                            CommandParameter="{Binding Website}"
+                                            MouseAction="LeftClick" />
+                                    </TextBlock.InputBindings>
+                                </TextBlock>
+
+                                <TextBlock
+                                    Style="{StaticResource DownloadIconStyle}"
+                                    Text="&#xF150;"
+                                    ToolTip="{DynamicResource PluginActionDownload}"
+                                    Visibility="{Binding ActionStatus, Converter={cnvt:PluginActionStatusToVisibilityConverter}, ConverterParameter=Download}">
+                                    <TextBlock.InputBindings>
+                                        <MouseBinding
+                                            Command="{Binding Data.DownloadPluginCommand, Source={StaticResource ViewModelProxy}}"
+                                            CommandParameter="{Binding}"
+                                            MouseAction="LeftClick" />
+                                    </TextBlock.InputBindings>
+                                </TextBlock>
+
+                                <TextBlock
+                                    Style="{StaticResource UpgradeIconStyle}"
+                                    Text="&#xF19B;"
+                                    ToolTip="{DynamicResource PluginActionUpgrade}"
+                                    Visibility="{Binding ActionStatus, Converter={cnvt:PluginActionStatusToVisibilityConverter}, ConverterParameter=Upgrade}">
+                                    <TextBlock.InputBindings>
+                                        <MouseBinding
+                                            Command="{Binding Data.DownloadPluginCommand, Source={StaticResource ViewModelProxy}}"
+                                            CommandParameter="{Binding}"
+                                            MouseAction="LeftClick" />
+                                    </TextBlock.InputBindings>
+                                </TextBlock>
+
+                                <TextBlock
+                                    Style="{StaticResource StatusIconStyle}"
+                                    Text="&#xF294;"
+                                    ToolTip="{DynamicResource PluginActionInstalled}"
+                                    Visibility="{Binding ActionStatus, Converter={cnvt:PluginActionStatusToVisibilityConverter}, ConverterParameter=Installed}" />
+
+                                <TextBlock
+                                    Style="{StaticResource PendingIconStyle}"
+                                    Text="&#xED88;"
+                                    ToolTip="{DynamicResource PluginActionPendingRestart}"
+                                    Visibility="{Binding ActionStatus, Converter={cnvt:PluginActionStatusToVisibilityConverter}, ConverterParameter=PendingRestart}" />
+
+                                <TextBlock
+                                    Style="{StaticResource MarketActionIconStyle}"
+                                    Text="&#xF369;"
+                                    ToolTip="{DynamicResource Cancel}"
+                                    Visibility="{Binding IsDownloading, Converter={cnvt:BoolToVisibilityConverter}}">
+                                    <TextBlock.InputBindings>
+                                        <MouseBinding
+                                            Command="{Binding Data.CancelDownloadCommand, Source={StaticResource ViewModelProxy}}"
+                                            CommandParameter="{Binding}"
+                                            MouseAction="LeftClick" />
+                                    </TextBlock.InputBindings>
+                                </TextBlock>
+                            </ikw:SimpleStackPanel>
+                        </Grid>
+
+                        <TextBlock
+                            Grid.Row="1"
+                            Style="{StaticResource PluginDescriptionStyle}"
+                            Text="{Binding Description}" />
+
+                        <Grid Grid.Row="2" Margin="0,6,0,0">
+                            <TextBlock Style="{StaticResource PluginMetaStyle}" Visibility="{Binding IsDownloading, Converter={cnvt:BoolInverseToVisibilityConverter}}">
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="{}{0} · v{1}">
+                                        <Binding Path="Author" />
+                                        <Binding Path="Version" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+
+                            <StackPanel VerticalAlignment="Center" Visibility="{Binding IsDownloading, Converter={cnvt:BoolToVisibilityConverter}}">
+                                <ProgressBar
+                                    Height="2"
+                                    Maximum="100"
+                                    Value="{Binding DownloadProgress}" />
+                                <TextBlock
+                                    Margin="0,2,0,0"
+                                    HorizontalAlignment="Right"
+                                    FontSize="{DynamicResource STControlFontSize10}"
+                                    Foreground="{DynamicResource {x:Static ui:ThemeKeys.TextFillColorSecondaryBrushKey}}"
+                                    Text="{Binding DownloadStatus}" />
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </Border>
+        </DataTemplate>
     </ui:Page.Resources>
     <Grid AllowDrop="True">
         <i:Interaction.Triggers>
@@ -225,12 +505,10 @@
                     x:Name="PART_PluginListBox"
                     control:ListBoxSelectionBehavior.AutoDeselectPrePlugins="True"
                     Background="Transparent"
+                    ItemTemplate="{StaticResource InstalledPluginTemplate}"
                     ItemsSource="{Binding PluginCollectionView}"
                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                     ScrollViewer.VerticalScrollBarVisibility="Auto">
-                    <ListBox.Resources>
-                        <s:BindingProxy x:Key="VmProxy" Data="{Binding}" />
-                    </ListBox.Resources>
                     <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
                             <WrapPanel HorizontalAlignment="Center" IsItemsHost="True" />
@@ -250,106 +528,6 @@
                             </Setter>
                         </Style>
                     </ListBox.ItemContainerStyle>
-                    <ListBox.ItemTemplate>
-                        <DataTemplate DataType="plugin:PluginMetaData">
-                            <Border Style="{StaticResource CardBorderStyle}">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="10" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-
-                                    <Image
-                                        Grid.Column="0"
-                                        Width="32"
-                                        Height="32"
-                                        VerticalAlignment="Center"
-                                        Source="{Binding IconPath}"
-                                        Stretch="Uniform" />
-
-                                    <Grid Grid.Column="2">
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="*" MinHeight="20" />
-                                            <RowDefinition Height="Auto" />
-                                        </Grid.RowDefinitions>
-
-                                        <Grid Grid.Row="0">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-
-                                            <TextBlock
-                                                Grid.Column="0"
-                                                Style="{StaticResource PluginNameStyle}"
-                                                Text="{Binding Name}" />
-
-                                            <ikw:SimpleStackPanel
-                                                Grid.Column="1"
-                                                Margin="8,0,0,0"
-                                                VerticalAlignment="Center"
-                                                Orientation="Horizontal"
-                                                Spacing="8">
-                                                <TextBlock
-                                                    Style="{StaticResource ActionIconStyle}"
-                                                    Text="&#xF480;"
-                                                    ToolTip="{DynamicResource PluginActionWebsite}">
-                                                    <TextBlock.InputBindings>
-                                                        <MouseBinding
-                                                            Command="{Binding Source={StaticResource VmProxy}, Path=Data.OpenOfficialLinkCommand}"
-                                                            CommandParameter="{Binding Website}"
-                                                            MouseAction="LeftClick" />
-                                                    </TextBlock.InputBindings>
-                                                </TextBlock>
-                                                <TextBlock
-                                                    IsEnabled="{Binding IsPrePlugin, Converter={cnvt:BoolInverseConverter}}"
-                                                    Style="{StaticResource ActionIconStyle}"
-                                                    Text="&#xF34C;"
-                                                    ToolTip="{DynamicResource Delete}">
-                                                    <TextBlock.InputBindings>
-                                                        <MouseBinding
-                                                            Command="{Binding Source={StaticResource VmProxy}, Path=Data.DeletePluginCommand}"
-                                                            CommandParameter="{Binding}"
-                                                            MouseAction="LeftClick" />
-                                                    </TextBlock.InputBindings>
-                                                </TextBlock>
-                                                <TextBlock
-                                                    Style="{StaticResource ActionIconStyle}"
-                                                    Text="&#xF418;"
-                                                    ToolTip="{DynamicResource OpenDirectory}">
-                                                    <TextBlock.InputBindings>
-                                                        <MouseBinding
-                                                            Command="{Binding Source={StaticResource VmProxy}, Path=Data.OpenPluginDirectoryCommand}"
-                                                            CommandParameter="{Binding}"
-                                                            MouseAction="LeftClick" />
-                                                    </TextBlock.InputBindings>
-                                                </TextBlock>
-                                            </ikw:SimpleStackPanel>
-                                        </Grid>
-
-                                        <TextBlock
-                                            Grid.Row="1"
-                                            Style="{StaticResource PluginDescriptionStyle}"
-                                            Text="{Binding Description}" />
-
-                                        <TextBlock
-                                            Grid.Row="2"
-                                            Margin="0,6,0,0"
-                                            Style="{StaticResource PluginMetaStyle}">
-                                            <TextBlock.Text>
-                                                <MultiBinding StringFormat="{}{0} · v{1}">
-                                                    <Binding Path="Author" />
-                                                    <Binding Path="Version" />
-                                                </MultiBinding>
-                                            </TextBlock.Text>
-                                        </TextBlock>
-                                    </Grid>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
                 </ListBox>
             </Border>
 
@@ -382,6 +560,7 @@
                     <ListBox
                         x:Name="PART_MarketPluginListBox"
                         Background="Transparent"
+                        ItemTemplate="{StaticResource MarketPluginTemplate}"
                         ItemsSource="{Binding PluginsView}"
                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                         ScrollViewer.VerticalScrollBarVisibility="Auto"
@@ -406,185 +585,6 @@
                                 </Setter>
                             </Style>
                         </ListBox.ItemContainerStyle>
-
-                        <ListBox.ItemTemplate>
-                            <DataTemplate DataType="vm:PluginMarketInfo">
-                                <Border Style="{StaticResource CardBorderStyle}">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="10" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-
-                                        <Image
-                                            Grid.Column="0"
-                                            Width="32"
-                                            Height="32"
-                                            VerticalAlignment="Center"
-                                            Source="{Binding IconUrl}"
-                                            Stretch="Uniform" />
-
-                                        <Grid Grid.Column="2">
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="*" MinHeight="20" />
-                                                <RowDefinition Height="Auto" />
-                                            </Grid.RowDefinitions>
-
-                                            <Grid Grid.Row="0">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
-
-                                                <TextBlock
-                                                    Grid.Column="0"
-                                                    Style="{StaticResource PluginNameStyle}"
-                                                    Text="{Binding Name}" />
-
-                                                <ikw:SimpleStackPanel
-                                                    Grid.Column="1"
-                                                    Margin="8,0,0,0"
-                                                    VerticalAlignment="Center"
-                                                    Orientation="Horizontal"
-                                                    Spacing="8">
-                                                    <ikw:SimpleStackPanel.Resources>
-                                                        <Style
-                                                            x:Key="DownloadIconStyle"
-                                                            BasedOn="{StaticResource MarketActionIconStyle}"
-                                                            TargetType="TextBlock">
-                                                            <Setter Property="Foreground" Value="#0078D4" />
-                                                            <Style.Triggers>
-                                                                <Trigger Property="IsMouseOver" Value="True">
-                                                                    <Setter Property="Foreground" Value="#106EBE" />
-                                                                </Trigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                        <Style
-                                                            x:Key="UpgradeIconStyle"
-                                                            BasedOn="{StaticResource MarketActionIconStyle}"
-                                                            TargetType="TextBlock">
-                                                            <Setter Property="Foreground" Value="#E74856" />
-                                                            <Style.Triggers>
-                                                                <Trigger Property="IsMouseOver" Value="True">
-                                                                    <Setter Property="Foreground" Value="#F1707A" />
-                                                                </Trigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                        <Style
-                                                            x:Key="StatusIconStyle"
-                                                            BasedOn="{StaticResource IconButtonStyle}"
-                                                            TargetType="TextBlock">
-                                                            <Setter Property="Foreground" Value="{DynamicResource {x:Static ui:ThemeKeys.TextFillColorDisabledBrushKey}}" />
-                                                        </Style>
-                                                        <Style
-                                                            x:Key="PendingIconStyle"
-                                                            BasedOn="{StaticResource IconButtonStyle}"
-                                                            TargetType="TextBlock">
-                                                            <Setter Property="Foreground" Value="#FF8C00" />
-                                                            <Setter Property="Opacity" Value="0.8" />
-                                                        </Style>
-                                                    </ikw:SimpleStackPanel.Resources>
-
-                                                    <TextBlock
-                                                        Style="{StaticResource MarketActionIconStyle}"
-                                                        Text="&#xF480;"
-                                                        ToolTip="{DynamicResource PluginActionWebsite}">
-                                                        <TextBlock.InputBindings>
-                                                            <MouseBinding
-                                                                Command="{Binding Data.OpenOfficialLinkCommand, Source={StaticResource ViewModelProxy}}"
-                                                                CommandParameter="{Binding Website}"
-                                                                MouseAction="LeftClick" />
-                                                        </TextBlock.InputBindings>
-                                                    </TextBlock>
-
-                                                    <TextBlock
-                                                        Style="{StaticResource DownloadIconStyle}"
-                                                        Text="&#xF150;"
-                                                        ToolTip="{DynamicResource PluginActionDownload}"
-                                                        Visibility="{Binding ActionStatus, Converter={cnvt:PluginActionStatusToVisibilityConverter}, ConverterParameter=Download}">
-                                                        <TextBlock.InputBindings>
-                                                            <MouseBinding
-                                                                Command="{Binding Data.DownloadPluginCommand, Source={StaticResource ViewModelProxy}}"
-                                                                CommandParameter="{Binding}"
-                                                                MouseAction="LeftClick" />
-                                                        </TextBlock.InputBindings>
-                                                    </TextBlock>
-
-                                                    <TextBlock
-                                                        Style="{StaticResource UpgradeIconStyle}"
-                                                        Text="&#xF19B;"
-                                                        ToolTip="{DynamicResource PluginActionUpgrade}"
-                                                        Visibility="{Binding ActionStatus, Converter={cnvt:PluginActionStatusToVisibilityConverter}, ConverterParameter=Upgrade}">
-                                                        <TextBlock.InputBindings>
-                                                            <MouseBinding
-                                                                Command="{Binding Data.DownloadPluginCommand, Source={StaticResource ViewModelProxy}}"
-                                                                CommandParameter="{Binding}"
-                                                                MouseAction="LeftClick" />
-                                                        </TextBlock.InputBindings>
-                                                    </TextBlock>
-
-                                                    <TextBlock
-                                                        Style="{StaticResource StatusIconStyle}"
-                                                        Text="&#xF294;"
-                                                        ToolTip="{DynamicResource PluginActionInstalled}"
-                                                        Visibility="{Binding ActionStatus, Converter={cnvt:PluginActionStatusToVisibilityConverter}, ConverterParameter=Installed}" />
-
-                                                    <TextBlock
-                                                        Style="{StaticResource PendingIconStyle}"
-                                                        Text="&#xED88;"
-                                                        ToolTip="{DynamicResource PluginActionPendingRestart}"
-                                                        Visibility="{Binding ActionStatus, Converter={cnvt:PluginActionStatusToVisibilityConverter}, ConverterParameter=PendingRestart}" />
-
-                                                    <TextBlock
-                                                        Style="{StaticResource MarketActionIconStyle}"
-                                                        Text="&#xF369;"
-                                                        ToolTip="{DynamicResource Cancel}"
-                                                        Visibility="{Binding IsDownloading, Converter={cnvt:BoolToVisibilityConverter}}">
-                                                        <TextBlock.InputBindings>
-                                                            <MouseBinding
-                                                                Command="{Binding Data.CancelDownloadCommand, Source={StaticResource ViewModelProxy}}"
-                                                                CommandParameter="{Binding}"
-                                                                MouseAction="LeftClick" />
-                                                        </TextBlock.InputBindings>
-                                                    </TextBlock>
-                                                </ikw:SimpleStackPanel>
-                                            </Grid>
-
-                                            <TextBlock
-                                                Grid.Row="1"
-                                                Style="{StaticResource PluginDescriptionStyle}"
-                                                Text="{Binding Description}" />
-
-                                            <Grid Grid.Row="2" Margin="0,6,0,0">
-                                                <TextBlock Style="{StaticResource PluginMetaStyle}" Visibility="{Binding IsDownloading, Converter={cnvt:BoolInverseToVisibilityConverter}}">
-                                                    <TextBlock.Text>
-                                                        <MultiBinding StringFormat="{}{0} · v{1}">
-                                                            <Binding Path="Author" />
-                                                            <Binding Path="Version" />
-                                                        </MultiBinding>
-                                                    </TextBlock.Text>
-                                                </TextBlock>
-
-                                                <StackPanel VerticalAlignment="Center" Visibility="{Binding IsDownloading, Converter={cnvt:BoolToVisibilityConverter}}">
-                                                    <ProgressBar
-                                                        Height="2"
-                                                        Maximum="100"
-                                                        Value="{Binding DownloadProgress}" />
-                                                    <TextBlock
-                                                        Margin="0,2,0,0"
-                                                        HorizontalAlignment="Right"
-                                                        FontSize="{DynamicResource STControlFontSize10}"
-                                                        Foreground="{DynamicResource {x:Static ui:ThemeKeys.TextFillColorSecondaryBrushKey}}"
-                                                        Text="{Binding DownloadStatus}" />
-                                                </StackPanel>
-                                            </Grid>
-                                        </Grid>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
                     </ListBox>
                 </Grid>
             </Border>
