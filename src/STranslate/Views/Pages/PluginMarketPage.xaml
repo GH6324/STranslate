@@ -182,55 +182,48 @@
                                                 Orientation="Horizontal"
                                                 Spacing="8">
                                                 <ikw:SimpleStackPanel.Resources>
-                                                    <Style x:Key="DownloadIconStyle" TargetType="TextBlock">
-                                                        <Setter Property="Foreground" Value="#0078D4" />
+                                                    <!-- 基础图标样式 -->
+                                                    <Style x:Key="BaseIconStyle" TargetType="TextBlock">
                                                         <Setter Property="VerticalAlignment" Value="Center" />
-                                                        <Setter Property="Cursor" Value="Hand" />
                                                         <Setter Property="FontFamily" Value="{DynamicResource FluentSystemIcons}" />
                                                         <Setter Property="FontSize" Value="{DynamicResource STControlFontSize16}" />
+                                                    </Style>
+                                                    <!-- 可点击图标基础样式 -->
+                                                    <Style x:Key="ClickableIconStyle" BasedOn="{StaticResource BaseIconStyle}" TargetType="TextBlock">
+                                                        <Setter Property="Cursor" Value="Hand" />
                                                         <Setter Property="Padding" Value="4" />
                                                         <Setter Property="Background" Value="Transparent" />
+                                                    </Style>
+                                                    <!-- 下载按钮样式 -->
+                                                    <Style x:Key="DownloadIconStyle" BasedOn="{StaticResource ClickableIconStyle}" TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="#0078D4" />
                                                         <Style.Triggers>
                                                             <Trigger Property="IsMouseOver" Value="True">
                                                                 <Setter Property="Foreground" Value="#106EBE" />
                                                             </Trigger>
                                                         </Style.Triggers>
                                                     </Style>
-                                                    <Style x:Key="UpgradeIconStyle" TargetType="TextBlock">
+                                                    <!-- 升级按钮样式 -->
+                                                    <Style x:Key="UpgradeIconStyle" BasedOn="{StaticResource ClickableIconStyle}" TargetType="TextBlock">
                                                         <Setter Property="Foreground" Value="#E74856" />
-                                                        <Setter Property="VerticalAlignment" Value="Center" />
-                                                        <Setter Property="Cursor" Value="Hand" />
-                                                        <Setter Property="FontFamily" Value="{DynamicResource FluentSystemIcons}" />
-                                                        <Setter Property="FontSize" Value="{DynamicResource STControlFontSize16}" />
-                                                        <Setter Property="Padding" Value="4" />
-                                                        <Setter Property="Background" Value="Transparent" />
                                                         <Style.Triggers>
                                                             <Trigger Property="IsMouseOver" Value="True">
                                                                 <Setter Property="Foreground" Value="#F1707A" />
                                                             </Trigger>
                                                         </Style.Triggers>
                                                     </Style>
-                                                    <Style x:Key="InstalledIconStyle" TargetType="TextBlock">
+                                                    <!-- 已安装图标样式 -->
+                                                    <Style x:Key="InstalledIconStyle" BasedOn="{StaticResource BaseIconStyle}" TargetType="TextBlock">
                                                         <Setter Property="Foreground" Value="{DynamicResource {x:Static ui:ThemeKeys.TextFillColorDisabledBrushKey}}" />
-                                                        <Setter Property="VerticalAlignment" Value="Center" />
-                                                        <Setter Property="FontFamily" Value="{DynamicResource FluentSystemIcons}" />
-                                                        <Setter Property="FontSize" Value="{DynamicResource STControlFontSize16}" />
                                                     </Style>
-                                                    <Style x:Key="PendingRestartIconStyle" TargetType="TextBlock">
+                                                    <!-- 待重启图标样式 -->
+                                                    <Style x:Key="PendingRestartIconStyle" BasedOn="{StaticResource BaseIconStyle}" TargetType="TextBlock">
                                                         <Setter Property="Foreground" Value="#FF8C00" />
-                                                        <Setter Property="VerticalAlignment" Value="Center" />
-                                                        <Setter Property="FontFamily" Value="{DynamicResource FluentSystemIcons}" />
-                                                        <Setter Property="FontSize" Value="{DynamicResource STControlFontSize16}" />
                                                         <Setter Property="Opacity" Value="0.8" />
                                                     </Style>
-                                                    <Style x:Key="CancelIconStyle" TargetType="TextBlock">
+                                                    <!-- 取消按钮样式 -->
+                                                    <Style x:Key="CancelIconStyle" BasedOn="{StaticResource ClickableIconStyle}" TargetType="TextBlock">
                                                         <Setter Property="Foreground" Value="{DynamicResource {x:Static ui:ThemeKeys.TextFillColorSecondaryBrushKey}}" />
-                                                        <Setter Property="VerticalAlignment" Value="Center" />
-                                                        <Setter Property="Cursor" Value="Hand" />
-                                                        <Setter Property="FontFamily" Value="{DynamicResource FluentSystemIcons}" />
-                                                        <Setter Property="FontSize" Value="{DynamicResource STControlFontSize16}" />
-                                                        <Setter Property="Padding" Value="4" />
-                                                        <Setter Property="Background" Value="Transparent" />
                                                         <Style.Triggers>
                                                             <Trigger Property="IsMouseOver" Value="True">
                                                                 <Setter Property="Foreground" Value="{DynamicResource {x:Static ui:ThemeKeys.TextFillColorPrimaryBrushKey}}" />
