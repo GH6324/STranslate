@@ -7,6 +7,7 @@ using STranslate.Helpers;
 using STranslate.Plugin;
 using STranslate.Services;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -101,6 +102,8 @@ public partial class PluginViewModel : ObservableObject
     public ObservableCollection<PluginMarketInfo> Plugins { get; } = [];
 
     private const string PluginsJsonUrl = "https://fastly.jsdelivr.net/gh/STranslate/STranslate-doc@main/vitepress/plugins.json";
+    private const int PluginLoadMaxConcurrency = 6;
+    private const int PluginUiBatchSize = 12;
 
     #endregion
 
@@ -210,7 +213,7 @@ public partial class PluginViewModel : ObservableObject
         e.Accepted = typeMatch && MatchesText(MarketFilterText, plugin.Name, plugin.Author, plugin.Description);
     }
 
-    private bool MatchesPluginType(Type pluginType)
+    private bool MatchesPluginType(Type? pluginType)
     {
         return PluginType switch
         {
@@ -253,14 +256,34 @@ public partial class PluginViewModel : ObservableObject
                 return;
             }
 
-            // 2. 并行获取每个插件的详细信息
-            var tasks = pluginIds.Select(GetPluginInfoAsync);
+            // 2. 有界并发获取每个插件的详细信息，避免瞬时并发过高导致 UI 抖动
+            using var semaphore = new SemaphoreSlim(PluginLoadMaxConcurrency);
+            var branchCache = new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var tasks = pluginIds.Select(async pluginId =>
+            {
+                await semaphore.WaitAsync();
+                try
+                {
+                    return await GetPluginInfoAsync(pluginId, branchCache);
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            });
             var plugins = await Task.WhenAll(tasks);
 
-            // 3. 添加到集合
-            foreach (var plugin in plugins.Where(p => p != null))
+            // 3. 分批添加到集合，降低主线程一次性通知压力
+            var availablePlugins = plugins.Where(p => p != null).Cast<PluginMarketInfo>().ToList();
+            for (int i = 0; i < availablePlugins.Count; i += PluginUiBatchSize)
             {
-                Plugins.Add(plugin!);
+                var batch = availablePlugins.Skip(i).Take(PluginUiBatchSize);
+                foreach (var plugin in batch)
+                {
+                    Plugins.Add(plugin);
+                }
+
+                await Task.Yield();
             }
 
             // 4. 更新安装状态
@@ -279,7 +302,8 @@ public partial class PluginViewModel : ObservableObject
         }
     }
 
-    private async Task<PluginMarketInfo?> GetPluginInfoAsync(string pluginId)
+    private async Task<PluginMarketInfo?> GetPluginInfoAsync(string pluginId,
+        ConcurrentDictionary<string, string> branchCache)
     {
         try
         {
@@ -295,17 +319,16 @@ public partial class PluginViewModel : ObservableObject
             var type = nameParts[2]; // Translate, Ocr, Tts, Vocabulary
 
             // 尝试获取 plugin.json（先 main 分支，失败则回退到 master）
-            var pluginInfo = await TryGetPluginInfoAsync(author, packageName);
+            // 并在单次加载内复用分支探测结果
+            var (pluginInfo, branch) = await TryGetPluginInfoAsync(author, packageName, branchCache);
             if (pluginInfo == null) return null;
 
             // 尝试获取多语言资源（zh-cn.json）
-            var (name, description) = await TryGetLocalizedInfoAsync(author, packageName, pluginInfo.Name, pluginInfo.Description);
+            var (name, description) = await TryGetLocalizedInfoAsync(author, packageName,
+                branch, pluginInfo.Name, pluginInfo.Description);
 
             // 构建下载 URL
             var downloadUrl = $"https://github.com/{author}/{packageName}/releases/download/v{pluginInfo.Version}/{packageName}.spkg";
-
-            // 确定实际使用的分支（用于图标等资源）
-            var branch = await GetWorkingBranchAsync(author, packageName);
 
             return new PluginMarketInfo
             {
@@ -328,55 +351,78 @@ public partial class PluginViewModel : ObservableObject
         }
     }
 
-    private async Task<PluginInfo?> TryGetPluginInfoAsync(string author, string packageName)
+    private async Task<(PluginInfo? PluginInfo, string Branch)> TryGetPluginInfoAsync(
+        string author,
+        string packageName,
+        ConcurrentDictionary<string, string> branchCache)
     {
+        var cacheKey = $"{author}/{packageName}";
+
+        // 优先尝试缓存分支
+        if (branchCache.TryGetValue(cacheKey, out var cachedBranch))
+        {
+            var cachedUrl = $"https://fastly.jsdelivr.net/gh/{author}/{packageName}@{cachedBranch}/{packageName}/plugin.json";
+            try
+            {
+                var cachedInfo = await _httpService.GetAsync<PluginInfo>(cachedUrl);
+                if (cachedInfo != null)
+                    return (cachedInfo, cachedBranch);
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                branchCache.TryRemove(cacheKey, out _);
+            }
+            catch
+            {
+                // 缓存分支请求失败时继续走标准探测流程
+            }
+        }
+
         // 先尝试 main 分支
         var mainUrl = $"https://fastly.jsdelivr.net/gh/{author}/{packageName}@main/{packageName}/plugin.json";
         try
         {
-            return await _httpService.GetAsync<PluginInfo>(mainUrl);
+            var pluginInfo = await _httpService.GetAsync<PluginInfo>(mainUrl);
+            if (pluginInfo != null)
+            {
+                branchCache[cacheKey] = "main";
+                return (pluginInfo, "main");
+            }
         }
         catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
             // 404 则回退到 master 分支
-            var masterUrl = $"https://fastly.jsdelivr.net/gh/{author}/{packageName}@master/{packageName}/plugin.json";
-            try
-            {
-                return await _httpService.GetAsync<PluginInfo>(masterUrl);
-            }
-            catch
-            {
-                return null;
-            }
         }
         catch
         {
-            return null;
+            return (null, "main");
         }
-    }
 
-    private async Task<string> GetWorkingBranchAsync(string author, string packageName)
-    {
-        var mainUrl = $"https://fastly.jsdelivr.net/gh/{author}/{packageName}@main/{packageName}/plugin.json";
+        var masterUrl = $"https://fastly.jsdelivr.net/gh/{author}/{packageName}@master/{packageName}/plugin.json";
         try
         {
-            await _httpService.GetAsync(mainUrl, CancellationToken.None);
-            return "main";
-        }
-        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-        {
-            return "master";
+            var pluginInfo = await _httpService.GetAsync<PluginInfo>(masterUrl);
+            if (pluginInfo != null)
+            {
+                branchCache[cacheKey] = "master";
+                return (pluginInfo, "master");
+            }
         }
         catch
         {
-            return "main";
+            return (null, "master");
         }
+
+        return (null, "main");
     }
 
     private async Task<(string Name, string Description)> TryGetLocalizedInfoAsync(
-        string author, string packageName, string defaultName, string defaultDescription)
+        string author,
+        string packageName,
+        string branch,
+        string defaultName,
+        string defaultDescription)
     {
-        var branch = await GetWorkingBranchAsync(author, packageName);
         var langUrl = $"https://fastly.jsdelivr.net/gh/{author}/{packageName}@{branch}/{packageName}/Languages/zh-cn.json";
 
         try
@@ -408,17 +454,22 @@ public partial class PluginViewModel : ObservableObject
         {
             if (localPlugins.TryGetValue(marketPlugin.PluginId, out var localPlugin))
             {
-                marketPlugin.IsInstalled = true;
+                if (!marketPlugin.IsInstalled)
+                    marketPlugin.IsInstalled = true;
                 marketPlugin.InstalledVersion = localPlugin.Version;
 
                 // 比较版本
                 var comparison = CompareVersions(localPlugin.Version, marketPlugin.Version);
-                marketPlugin.CanUpgrade = comparison < 0;
+                var canUpgrade = comparison < 0;
+                if (marketPlugin.CanUpgrade != canUpgrade)
+                    marketPlugin.CanUpgrade = canUpgrade;
             }
             else
             {
-                marketPlugin.IsInstalled = false;
-                marketPlugin.CanUpgrade = false;
+                if (marketPlugin.IsInstalled)
+                    marketPlugin.IsInstalled = false;
+                if (marketPlugin.CanUpgrade)
+                    marketPlugin.CanUpgrade = false;
                 marketPlugin.InstalledVersion = null;
             }
         }
