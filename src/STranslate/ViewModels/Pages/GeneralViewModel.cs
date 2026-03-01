@@ -59,6 +59,40 @@ public partial class GeneralViewModel : SearchViewModelBase
         SyncMainHeaderActions();
     }
 
+    [RelayCommand]
+    private void ShowAllHeaderActions()
+    {
+        _isSyncingMainHeaderActions = true;
+        try
+        {
+            ReplaceItems(VisibleHeaderActions, MainHeaderActions.DefaultOrder);
+            ReplaceItems(AvailableHeaderActions, []);
+        }
+        finally
+        {
+            _isSyncingMainHeaderActions = false;
+        }
+
+        SyncMainHeaderActions();
+    }
+
+    [RelayCommand]
+    private void HideAllHeaderActions()
+    {
+        _isSyncingMainHeaderActions = true;
+        try
+        {
+            ReplaceItems(VisibleHeaderActions, []);
+            ReplaceItems(AvailableHeaderActions, MainHeaderActions.DefaultOrder);
+        }
+        finally
+        {
+            _isSyncingMainHeaderActions = false;
+        }
+
+        SyncMainHeaderActions();
+    }
+
     public List<int> ScreenNumbers
     {
         get

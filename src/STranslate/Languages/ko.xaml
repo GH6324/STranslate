@@ -102,6 +102,8 @@
     <sys:String x:Key="General_MainHeaderPreview">미리보기(메인 Header)</sys:String>
     <sys:String x:Key="General_MainHeaderPool">컨트롤 풀(숨김)</sys:String>
     <sys:String x:Key="General_MainHeaderConfigHint">미리보기 영역 내 드래그 정렬을 지원합니다. 기록 탐색은 묶음 항목입니다.</sys:String>
+    <sys:String x:Key="General_MainHeaderShowAll">모두 표시</sys:String>
+    <sys:String x:Key="General_MainHeaderHideAll">모두 숨기기</sys:String>
     <sys:String x:Key="General_FontSize">글꼴 크기</sys:String>
     <sys:String x:Key="General_FontSizeDescription">「우클릭 메뉴」를 제외한 모든 글꼴 크기를 조정합니다.</sys:String>
     <sys:String x:Key="General_OutputShowingControl">출력 표시 제어</sys:String>

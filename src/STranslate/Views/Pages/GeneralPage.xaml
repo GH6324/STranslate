@@ -623,10 +623,13 @@
                         <ui:SettingsCard.HeaderIcon>
                             <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.PanelBottom_20_Regular}" />
                         </ui:SettingsCard.HeaderIcon>
-                        <Button
+                        <ikw:SimpleStackPanel
                             HorizontalAlignment="Right"
-                            Command="{Binding ResetHeaderActionsCommand}"
-                            Content="{DynamicResource Reset}" />
+                            Orientation="Horizontal"
+                            Spacing="8">
+                            <Button Command="{Binding ShowAllHeaderActionsCommand}" Content="{DynamicResource General_MainHeaderShowAll}" />
+                            <Button Command="{Binding HideAllHeaderActionsCommand}" Content="{DynamicResource General_MainHeaderHideAll}" />
+                        </ikw:SimpleStackPanel>
                     </ui:SettingsCard>
 
                     <ui:SettingsCard HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">

@@ -105,6 +105,8 @@
     <sys:String x:Key="General_MainHeaderPreview">预览区（主界面 Header）</sys:String>
     <sys:String x:Key="General_MainHeaderPool">控件池（未显示）</sys:String>
     <sys:String x:Key="General_MainHeaderConfigHint">支持在预览区内拖拽排序；历史导航为组合项。</sys:String>
+    <sys:String x:Key="General_MainHeaderShowAll">全部显示</sys:String>
+    <sys:String x:Key="General_MainHeaderHideAll">全部隐藏</sys:String>
     <sys:String x:Key="General_FontSize">字体大小</sys:String>
     <sys:String x:Key="General_FontSizeDescription">调整除「右键菜单」外的所有字体大小</sys:String>
     <sys:String x:Key="General_OutputShowingControl">输出控件显示控制</sys:String>
