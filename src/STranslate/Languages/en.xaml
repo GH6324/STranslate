@@ -101,7 +101,7 @@
     <sys:String x:Key="General_ShowClipboardMonitor">Show Clipboard Monitor Button</sys:String>
     <sys:String x:Key="General_ShowClipboardMonitorDescription">Display the clipboard monitor toggle button in the title bar of the main interface.</sys:String>
     <sys:String x:Key="General_MainHeaderConfig">Main Header Button Layout</sys:String>
-    <sys:String x:Key="General_MainHeaderConfigDescription">Drag items from the pool into preview to show, drag back to hide, and reorder directly in preview.</sys:String>
+    <sys:String x:Key="General_MainHeaderConfigDescription">The top row is Preview and the bottom row is the Action Pool. Drag an item from the pool to Preview to show it, drag it back to hide it, and drag within Preview to reorder.</sys:String>
     <sys:String x:Key="General_MainHeaderPreview">Preview (Main Header)</sys:String>
     <sys:String x:Key="General_MainHeaderPool">Action Pool (Hidden)</sys:String>
     <sys:String x:Key="General_MainHeaderShowAll">Show All</sys:String>

@@ -98,7 +98,7 @@
     <sys:String x:Key="General_ShowClipboardMonitor">クリップボード監視ボタンを表示</sys:String>
     <sys:String x:Key="General_ShowClipboardMonitorDescription">メイン画面のタイトルバーにクリップボード監視切替ボタンを表示します。</sys:String>
     <sys:String x:Key="General_MainHeaderConfig">メインヘッダーボタン配置</sys:String>
-    <sys:String x:Key="General_MainHeaderConfigDescription">下のプールからプレビューへドラッグすると表示、戻すと非表示になり、プレビュー内で並び替えできます。</sys:String>
+    <sys:String x:Key="General_MainHeaderConfigDescription">上の行がプレビュー、下の行がコントロールプールです。プールからプレビューへドラッグすると表示、プールへ戻すと非表示になり、プレビュー内で並び替えもできます。</sys:String>
     <sys:String x:Key="General_MainHeaderPreview">プレビュー（メイン Header）</sys:String>
     <sys:String x:Key="General_MainHeaderPool">コントロールプール（非表示）</sys:String>
     <sys:String x:Key="General_MainHeaderShowAll">すべて表示</sys:String>

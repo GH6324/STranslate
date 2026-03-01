@@ -98,7 +98,7 @@
     <sys:String x:Key="General_ShowClipboardMonitor">클립보드 모니터링 버튼 표시</sys:String>
     <sys:String x:Key="General_ShowClipboardMonitorDescription">메인 화면 제목 표시줄에 클립보드 모니터링 전환 버튼을 표시합니다.</sys:String>
     <sys:String x:Key="General_MainHeaderConfig">메인 헤더 버튼 배치</sys:String>
-    <sys:String x:Key="General_MainHeaderConfigDescription">아래 풀의 항목을 미리보기로 드래그하면 표시되고, 다시 풀로 드래그하면 숨김 처리되며 미리보기에서 순서를 변경할 수 있습니다.</sys:String>
+    <sys:String x:Key="General_MainHeaderConfigDescription">윗줄은 미리보기, 아랫줄은 컨트롤 풀입니다. 풀에서 미리보기로 드래그하면 표시되고, 다시 풀로 드래그하면 숨겨집니다. 미리보기 안에서 드래그해 순서도 바꿀 수 있습니다.</sys:String>
     <sys:String x:Key="General_MainHeaderPreview">미리보기(메인 Header)</sys:String>
     <sys:String x:Key="General_MainHeaderPool">컨트롤 풀(숨김)</sys:String>
     <sys:String x:Key="General_MainHeaderShowAll">모두 표시</sys:String>
