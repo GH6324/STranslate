@@ -7,7 +7,6 @@ using STranslate.Core;
 using STranslate.Helpers;
 using STranslate.Plugin;
 using STranslate.Services;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
