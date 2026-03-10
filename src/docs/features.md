@@ -390,6 +390,8 @@ private async Task SearchAsync()
 }
 ```
 
+> 说明：当前 `DebounceExecutor` 使用 generation 判定“最新任务”而非 `CancellationToken` 取消 `Task.Delay`，可减少快速输入场景下的 `TaskCanceledException` 调试输出噪音，并在执行阶段统一捕获异常用于调试输出。
+
 #### 导出功能
 
 支持将选中的历史记录导出为 JSON 文件：
@@ -619,3 +621,40 @@ private static int CompareVersions(string? localVersion, string? marketVersion)
 | `STranslate/ViewModels/Pages/PluginMarketViewModel.cs` | 插件市场视图模型 |
 | `STranslate/Models/PluginMarketInfo.cs` | 市场插件数据模型 |
 | `STranslate/Converters/PluginMarketConverters.cs` | 状态到文本/样式的转换器 |
+
+## DebounceExecutor 重构
+
+原实现基于 `CancellationTokenSource`（CTS），每次触发防抖时取消前一个 `Task.Delay`。
+在高频调用场景下，调试输出窗口会出现大量 `TaskCanceledException`，虽然已被 `catch` 吞掉，但影响调试体验且存在不必要的性能开销。
+
+### Generation vs CTS 对比
+
+```mermaid
+flowchart LR
+    subgraph CTS["CTS 方案"]
+        A1["调用 Execute"] --> B1["Cancel 旧 CTS"]
+        B1 --> C1["Task.Delay(token)"]
+        C1 -->|"取消"| D1["抛出 TaskCanceledException"]
+        C1 -->|"完成"| E1["执行 action"]
+        D1 --> F1["catch 吞掉异常"]
+    end
+    subgraph GEN["Generation 方案"]
+        A2["调用 Execute"] --> B2["_generation++"]
+        B2 --> C2["Task.Delay()"]
+        C2 --> D2{"generation == 最新?"}
+        D2 -->|"否"| E2["直接 return"]
+        D2 -->|"是"| F2["执行 action"]
+    end
+```
+
+### 性能对比
+
+- Generation 方案更优，原因归结为一点：
+异常创建是昂贵操作。 .NET 中每次 throw 都要捕获完整堆栈（StackTrace），涉及运行时反射调用链。即使被 catch 吞掉，分配和堆栈捕获的成本已经产生。
+做个量化对比（快速打字触发 20 次/秒，delay 500ms）：
+•	CTS：每秒约 20 次 TaskCanceledException 分配 → 堆栈捕获 + GC 压力
+•	Generation：每秒约 20 个 Timer 空跑 500ms → 每个 Timer 几百字节，到期自动回收
+Timer 空跑的代价是微不足道的常量内存，而异常分配的代价会随频率线性增长且伴随 GC。
+
+- CTS 更合适的场景
+当 delay 期间涉及真正需要中断的长时间操作时（如网络请求、大文件读取），CTS 的硬取消才有意义。对于你的防抖场景 — 只是等一个短暂的 delay 再决定是否执行 — Generation 方案是更匹配的选择。
