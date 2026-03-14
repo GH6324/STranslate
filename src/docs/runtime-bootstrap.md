@@ -32,7 +32,7 @@
    - `SqlService.InitializeDB()`
    - 注册全局异常处理
    - 创建主窗口与主 VM
-8. 主窗口 `Loaded` 时执行延迟初始化：`Settings.LazyInitialize()`、`HotkeySettings.LazyInitialize()`、托盘提示与 WebDav 后置备份上传。
+8. 主窗口 `Loaded` 时执行延迟初始化：`Settings.LazyInitialize()`、`HotkeySettings.LazyInitialize()`、托盘提示、WebDav 后置备份上传，以及自动检查更新服务启动。
 
 ### 从入口到结果：退出与资源回收
 1. `ProcessExit`、`Application.Exit`、`SessionEnding` 任一事件触发时统一进入 `Dispose()`。
