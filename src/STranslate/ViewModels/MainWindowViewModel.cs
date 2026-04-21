@@ -153,6 +153,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [NotifyCanExecuteChangedFor(nameof(SingleTranslateCommand))]
     [NotifyCanExecuteChangedFor(nameof(TranslateCommand))]
     [NotifyCanExecuteChangedFor(nameof(SelectIdentifiedLanguageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SelectLanguageDetectorCommand))]
     public partial string InputText { get; set; } = string.Empty;
 
     [ObservableProperty]
@@ -421,6 +422,17 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         Show();
         UpdateCaret();
         await Task.CompletedTask;
+    }
+
+    [RelayCommand(CanExecute = nameof(CanSelectLanguageDetectorForCurrentText))]
+    private void SelectLanguageDetector(LanguageDetectorType detector)
+    {
+        Settings.LanguageDetector = detector;
+        CancelAllOperations();
+
+        TranslateCommand.Execute("force");
+        Show();
+        UpdateCaret();
     }
 
     #region Translation Execution Logic
@@ -2142,6 +2154,8 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
                CanTranslate &&
                language != LangEnum.Auto;
     }
+
+    private bool CanSelectLanguageDetectorForCurrentText(LanguageDetectorType _) => CanTranslate;
 
     private async Task<TranslationLanguageContext> ResolveTranslationLanguageContextAsync(LangEnum? forcedSourceLanguage, CancellationToken cancellationToken)
     {

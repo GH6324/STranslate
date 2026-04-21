@@ -28,7 +28,8 @@
    - 若启用历史缓存：用 `(InputText, SourceLang, TargetLang)` 查询 `SqlService`。
    - 命中缓存后把结果注入各插件结果对象，仅保留未命中服务继续实时执行。
 4. 对未命中服务调用 `LanguageDetector.GetLanguageAsync()` 获取最终 `source/target`。
-   - 当用户在“识别为”标签上手动选择语种时，本次主翻译会跳过缓存并强制以所选语种作为 `source` 执行一次；执行结束后仍按原始 `(InputText, SourceLang, TargetLang)` 键回写最新结果。
+   - 当用户在“识别为”快捷入口切换语言检测器时，会更新 `Settings.LanguageDetector` 并跳过缓存重新翻译；识别状态仍由本次翻译流程按实际检测结果刷新。
+   - 当用户在“识别为”后面的识别结果上下拉选择语种时，本次主翻译会跳过缓存并强制以所选语种作为 `source` 执行一次。
 5. 使用 `SemaphoreSlim` 并发执行服务：
    - `ITranslatePlugin` 走主翻译，按需执行自动回译。
    - `IDictionaryPlugin` 走词典查询路径。
@@ -60,9 +61,11 @@
 - `TranslateResult` / `DictionaryResult`
   - 承载执行状态、耗时、文本与结构化词典结果。
 - 输入区识别状态
-  - `None`：当前不显示识别语种标签。
-  - `Cache`：当前翻译结果来自缓存命中；若缓存里记录了 `EffectiveSourceLang`，语种下拉仍预选该语言。
-  - `Detected`：显示最近一次主翻译实际使用的源语种，可能来自自动识别成功、识别失败后的回退语言，或用户手动选择的一次性强制执行。
+   - `None`：当前不显示识别语种标签。
+   - `Cache`：当前翻译结果来自缓存命中；若缓存里记录了 `EffectiveSourceLang`，识别状态仍可显示该语言。
+   - `Detected`：显示最近一次主翻译实际使用的源语种，可能来自自动识别成功或识别失败后的回退语言。
+   - “识别为”文字快捷入口：在主界面切换语言检测器，并复用跳过缓存的翻译路径立即刷新结果。
+   - “识别为”后的识别结果：保留语种下拉，用于手动纠正本次翻译的源语种。
 - 关键设置项
   - `AutoTranslate`、`AutoTranslateDelayMs`
   - `CopyAfterTranslation`、`CopyAfterTranslationNotAutomatic`

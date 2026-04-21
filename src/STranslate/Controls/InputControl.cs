@@ -17,6 +17,7 @@ public class InputControl : Control
     private const string PartFontSizeHintBorderName = "PART_FontSizeHintBorder";
     private const string PartFontSizeTextName = "PART_FontSizeText";
     private const string PartIdentifiedLanguageComboBoxName = "PART_IdentifiedLanguageComboBox";
+    private const string PartLanguageDetectorComboBoxName = "PART_LanguageDetectorComboBox";
     private const int FontSizeHintAnimationDurationMs = 1200;
 
     #endregion
@@ -92,6 +93,33 @@ public class InputControl : Control
             typeof(bool),
             typeof(InputControl),
             new PropertyMetadata(false));
+
+    public IEnumerable<DropdownDataGeneric<LanguageDetectorType>>? LanguageDetectorItemsSource
+    {
+        get => (IEnumerable<DropdownDataGeneric<LanguageDetectorType>>?)GetValue(LanguageDetectorItemsSourceProperty);
+        set => SetValue(LanguageDetectorItemsSourceProperty, value);
+    }
+
+    public static readonly DependencyProperty LanguageDetectorItemsSourceProperty =
+        DependencyProperty.Register(
+            nameof(LanguageDetectorItemsSource),
+            typeof(IEnumerable<DropdownDataGeneric<LanguageDetectorType>>),
+            typeof(InputControl));
+
+    public LanguageDetectorType SelectedLanguageDetector
+    {
+        get => (LanguageDetectorType)GetValue(SelectedLanguageDetectorProperty);
+        set => SetValue(SelectedLanguageDetectorProperty, value);
+    }
+
+    public static readonly DependencyProperty SelectedLanguageDetectorProperty =
+        DependencyProperty.Register(
+            nameof(SelectedLanguageDetector),
+            typeof(LanguageDetectorType),
+            typeof(InputControl),
+            new FrameworkPropertyMetadata(
+                LanguageDetectorType.Local,
+                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
 
     public bool IsIdentify
     {
@@ -270,10 +298,23 @@ public class InputControl : Control
             typeof(ICommand),
             typeof(InputControl));
 
+    public ICommand? SelectLanguageDetectorCommand
+    {
+        get => (ICommand?)GetValue(SelectLanguageDetectorCommandProperty);
+        set => SetValue(SelectLanguageDetectorCommandProperty, value);
+    }
+
+    public static readonly DependencyProperty SelectLanguageDetectorCommandProperty =
+        DependencyProperty.Register(
+            nameof(SelectLanguageDetectorCommand),
+            typeof(ICommand),
+            typeof(InputControl));
+
     private TextBox? _textBox;
     private Border? _fontSizeHintBorder;
     private TextBlock? _fontSizeText;
     private ComboBox? _identifiedLanguageComboBox;
+    private ComboBox? _languageDetectorComboBox;
     private CommandBinding? _pasteBinding;
 
     public override void OnApplyTemplate()
@@ -291,12 +332,16 @@ public class InputControl : Control
         if (_identifiedLanguageComboBox != null)
             _identifiedLanguageComboBox.SelectionChanged -= OnIdentifiedLanguageComboBoxSelectionChanged;
 
+        if (_languageDetectorComboBox != null)
+            _languageDetectorComboBox.SelectionChanged -= OnLanguageDetectorComboBoxSelectionChanged;
+
         base.OnApplyTemplate();
 
         _textBox = GetTemplateChild(PartTextBoxName) as TextBox;
         _fontSizeHintBorder = GetTemplateChild(PartFontSizeHintBorderName) as Border;
         _fontSizeText = GetTemplateChild(PartFontSizeTextName) as TextBlock;
         _identifiedLanguageComboBox = GetTemplateChild(PartIdentifiedLanguageComboBoxName) as ComboBox;
+        _languageDetectorComboBox = GetTemplateChild(PartLanguageDetectorComboBoxName) as ComboBox;
 
         // 绑定粘贴命令
         if (_textBox != null)
@@ -310,6 +355,9 @@ public class InputControl : Control
 
         if (_identifiedLanguageComboBox != null)
             _identifiedLanguageComboBox.SelectionChanged += OnIdentifiedLanguageComboBoxSelectionChanged;
+
+        if (_languageDetectorComboBox != null)
+            _languageDetectorComboBox.SelectionChanged += OnLanguageDetectorComboBoxSelectionChanged;
     }
 
     /// <summary>
@@ -481,7 +529,7 @@ public class InputControl : Control
     {
         base.OnMouseLeftButtonDown(e);
 
-        if (IsClickInsideIdentifiedLanguageSelector(e.OriginalSource))
+        if (IsClickInsideLanguageSelector(e.OriginalSource))
             return;
 
         if (_textBox != null && !_textBox.IsFocused)
@@ -532,12 +580,28 @@ public class InputControl : Control
         _identifiedLanguageComboBox.IsDropDownOpen = false;
     }
 
-    private bool IsClickInsideIdentifiedLanguageSelector(object? source)
+    private void OnLanguageDetectorComboBoxSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_identifiedLanguageComboBox == null || source is not DependencyObject dependencyObject)
+        if (_languageDetectorComboBox == null || !_languageDetectorComboBox.IsDropDownOpen)
+            return;
+
+        if (_languageDetectorComboBox.SelectedValue is not LanguageDetectorType detector)
+            return;
+
+        if (SelectLanguageDetectorCommand?.CanExecute(detector) != true)
+            return;
+
+        SelectLanguageDetectorCommand.Execute(detector);
+        _languageDetectorComboBox.IsDropDownOpen = false;
+    }
+
+    private bool IsClickInsideLanguageSelector(object? source)
+    {
+        if (source is not DependencyObject dependencyObject)
             return false;
 
-        return IsDescendantOf(dependencyObject, _identifiedLanguageComboBox);
+        return IsDescendantOf(dependencyObject, _identifiedLanguageComboBox) ||
+               IsDescendantOf(dependencyObject, _languageDetectorComboBox);
     }
 
     private static bool IsDescendantOf(DependencyObject? source, DependencyObject? ancestor)

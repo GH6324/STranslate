@@ -45,7 +45,7 @@
                                 <ControlTemplate TargetType="ToggleButton">
                                     <Border
                                         x:Name="ContentBorder"
-                                        Padding="4,2"
+                                        Padding="2,1"
                                         Background="Transparent"
                                         CornerRadius="{DynamicResource {x:Static ui:ThemeKeys.ControlCornerRadiusKey}}">
                                         <TextBlock
@@ -93,6 +93,7 @@
                                 Background="{DynamicResource {x:Static ui:ThemeKeys.SolidBackgroundFillColorBaseBrushKey}}"
                                 CornerRadius="6">
                                 <Border
+                                    MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
                                     Padding="4"
                                     Background="{DynamicResource SettingsCardBackground}"
                                     BorderBrush="{DynamicResource SettingsCardBorderBrush}"
@@ -207,7 +208,7 @@
                                     Visibility="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=IsIdentify, Converter={cnvt:BoolToVisibilityConverter}}" />
 
                                 <ui:ElevationBorder
-                                    Padding="5,3"
+                                    Padding="5,1"
                                     VerticalAlignment="Center"
                                     Background="{DynamicResource {x:Static ui:ThemeKeys.ControlFillColorDefaultBrushKey}}"
                                     BorderBrush="{DynamicResource {x:Static ui:ThemeKeys.ControlElevationBorderBrushKey}}"
@@ -215,10 +216,20 @@
                                     CornerRadius="{DynamicResource {x:Static ui:ThemeKeys.ControlCornerRadiusKey}}"
                                     Visibility="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=IdentifiedLanguage, Converter={cnvt:EqualToVisibilityInverseConverter}}">
                                     <ikw:SimpleStackPanel Orientation="Horizontal">
-                                        <TextBlock VerticalAlignment="Center" FontSize="{DynamicResource STControlFontSize12}">
-                                            <Run Text="{DynamicResource IdentifiedLanguageLabel}" />
-                                            <Run Text=": " />
-                                        </TextBlock>
+                                        <ComboBox
+                                            x:Name="PART_LanguageDetectorComboBox"
+                                            DisplayMemberPath="Display"
+                                            FontSize="{DynamicResource STControlFontSize12}"
+                                            ItemsSource="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=LanguageDetectorItemsSource}"
+                                            SelectedValue="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=SelectedLanguageDetector, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                            SelectedValuePath="Value"
+                                            Style="{StaticResource IdentifiedLanguageComboBoxStyle}"
+                                            Tag="{DynamicResource IdentifiedLanguageLabel}"
+                                            ToolTip="{DynamicResource General_LanguageDetector}" />
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            FontSize="{DynamicResource STControlFontSize12}"
+                                            Text=": " />
                                         <ComboBox
                                             x:Name="PART_IdentifiedLanguageComboBox"
                                             DisplayMemberPath="Display"
@@ -227,8 +238,8 @@
                                             ItemsSource="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=IdentifiedLanguageItemsSource}"
                                             SelectedValue="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=SelectedIdentifiedLanguage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                             SelectedValuePath="Value"
-                                            Tag="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=IdentifiedLanguage}"
-                                            Style="{StaticResource IdentifiedLanguageComboBoxStyle}" />
+                                            Style="{StaticResource IdentifiedLanguageComboBoxStyle}"
+                                            Tag="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=IdentifiedLanguage}" />
                                     </ikw:SimpleStackPanel>
                                 </ui:ElevationBorder>
                             </ikw:SimpleStackPanel>
