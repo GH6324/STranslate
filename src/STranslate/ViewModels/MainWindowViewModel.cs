@@ -191,7 +191,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         set
         {
             if (IsMouseHook && !value)
-                iNKORE.UI.WPF.Modern.Controls.MessageBox.Show("监听鼠标划词时窗口必须置顶", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                AppMessageBox.Show("监听鼠标划词时窗口必须置顶", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
             else
                 SetProperty(ref field, value);
         }

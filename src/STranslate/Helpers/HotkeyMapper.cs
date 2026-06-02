@@ -454,7 +454,7 @@ public class HotkeyMapper
             {
                 try
                 {
-                    iNKORE.UI.WPF.Modern.Controls.MessageBox.Show(
+                    AppMessageBox.Show(
                         message,
                         Constant.AppName,
                         MessageBoxButton.OK,

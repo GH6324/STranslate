@@ -64,7 +64,7 @@
 ## 错误处理与通知策略
 
 ### 服务未配置（阻断性错误）
-当 OCR / TTS 等核心服务未配置或全部禁用时，使用 `Helper.PromptConfigureService` 弹出 MessageBox（OK/Cancel）：
+当 OCR / TTS 等核心服务未配置或全部禁用时，使用 `Helper.PromptConfigureService` 弹出 MessageBox（OK/Cancel）。弹窗底层统一走 `AppMessageBox`，活动窗口优先、没有活动窗口时通过主屏中心的临时透明 owner 显示：
 - 用户点击 **确定** → 自动打开设置窗口并定位到对应配置页。
 - 用户点击 **取消** → 仅关闭弹窗，不跳转。
 

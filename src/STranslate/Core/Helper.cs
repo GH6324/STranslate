@@ -18,7 +18,7 @@ public static class Helper
 
     public static void PromptConfigureService(string title, string message, string pageName)
     {
-        var result = iNKORE.UI.WPF.Modern.Controls.MessageBox.Show(
+        var result = AppMessageBox.Show(
             message,
             title,
             MessageBoxButton.OKCancel,
