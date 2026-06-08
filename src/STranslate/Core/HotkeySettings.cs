@@ -435,8 +435,7 @@ public partial class HotkeySettings : ObservableObject
     {
         return () =>
         {
-            if (Ioc.Default.GetRequiredService<Settings>().IgnoreHotkeysOnFullscreen &&
-                Win32Helper.IsForegroundWindowFullscreen())
+            if (HotkeyExecutionGuard.ShouldSkipGlobalHotkey())
                 return;
 
             action();

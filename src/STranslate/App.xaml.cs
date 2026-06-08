@@ -313,6 +313,7 @@ public partial class App : ISingleInstanceApp, INavigation, IDisposable
 
         var previousShutdownMode = ShutdownMode;
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
+        AppRuntimeState.BeginInitialSetup();
         try
         {
             var welcomeWindow = new WelcomeSetupWindow();
@@ -327,6 +328,7 @@ public partial class App : ISingleInstanceApp, INavigation, IDisposable
         finally
         {
             ShutdownMode = previousShutdownMode;
+            AppRuntimeState.EndInitialSetup();
         }
     }
 
