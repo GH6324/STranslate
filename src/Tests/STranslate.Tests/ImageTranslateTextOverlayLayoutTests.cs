@@ -8,7 +8,7 @@ namespace STranslate.Tests;
 public class ImageTranslateTextOverlayLayoutTests
 {
     [Fact]
-    public void MultilineParagraphFontSizeIsLimitedByMedianLineHeight()
+    public void MultilineShortTranslationUsesRegionFillFontSize()
     {
         var block = Block(
             Box(0, 0, 1000, 150),
@@ -16,14 +16,43 @@ public class ImageTranslateTextOverlayLayoutTests
             Box(0, 36, 900, 30),
             Box(0, 72, 900, 30));
 
-        var plan = CreatePlan(block, new Rect(0, 0, 1000, 150), (_, _) => new Size(20, 20));
+        var plan = CreatePlan(
+            block,
+            new Rect(0, 0, 1000, 150),
+            (fontSize, _) => new Size(fontSize * 4, fontSize * 1.28));
 
         Assert.True(plan.IsMultiLine);
-        Assert.Equal(30 * 0.90, plan.FontSize, precision: 3);
+        Assert.False(plan.ShouldTrim);
+        Assert.True(plan.FontSize > 30 * 0.90);
+        Assert.InRange(plan.FontSize, 115, 116);
     }
 
     [Fact]
-    public void SingleLineTitleFontSizeUsesSingleLineLimitAndGlobalMaximum()
+    public void MultilineLongTranslationShrinksToFitRegion()
+    {
+        const double textUnits = 90;
+        var block = Block(
+            Box(0, 0, 1000, 150),
+            Box(0, 0, 900, 30),
+            Box(0, 36, 900, 30),
+            Box(0, 72, 900, 30));
+
+        var plan = CreatePlan(
+            block,
+            new Rect(0, 0, 1000, 150),
+            (fontSize, textRect) => MeasureWrappedText(fontSize, textRect, textUnits));
+
+        var measured = MeasureWrappedText(plan.FontSize, plan.TextRect, textUnits);
+
+        Assert.True(plan.IsMultiLine);
+        Assert.False(plan.ShouldTrim);
+        Assert.True(plan.FontSize > 30 * 0.90);
+        Assert.True(plan.FontSize < ImageTranslateTextOverlayPlan.MaxFontSize);
+        Assert.True(measured.Height <= plan.TextRect.Height + 0.1);
+    }
+
+    [Fact]
+    public void SingleLineTitleFontSizeUsesExpandedRegionHeight()
     {
         var block = Block(
             Box(0, 0, 400, 80),
@@ -32,7 +61,7 @@ public class ImageTranslateTextOverlayLayoutTests
         var plan = CreatePlan(block, new Rect(0, 0, 400, 80), (_, _) => new Size(20, 20));
 
         Assert.False(plan.IsMultiLine);
-        Assert.Equal(ImageTranslateTextOverlayPlan.MaxFontSize, plan.FontSize);
+        Assert.Equal(plan.TextClipRect.Height * 1.2, plan.FontSize, precision: 3);
     }
 
     [Fact]
@@ -201,7 +230,7 @@ public class ImageTranslateTextOverlayLayoutTests
         Assert.Equal(boundingRect, plan.EraseRects[0]);
         Assert.Equal(boundingRect, plan.TextClipRect);
         Assert.Equal(boundingRect, plan.OverlayRect);
-        Assert.Equal(30 * 1.08, plan.FontSize, precision: 3);
+        Assert.Equal(boundingRect.Height * 1.2, plan.FontSize, precision: 3);
     }
 
     [Fact]
@@ -280,6 +309,12 @@ public class ImageTranslateTextOverlayLayoutTests
         Assert.True(outer.Top <= inner.Top);
         Assert.True(outer.Right >= inner.Right);
         Assert.True(outer.Bottom >= inner.Bottom);
+    }
+
+    private static Size MeasureWrappedText(double fontSize, Rect textRect, double textUnits)
+    {
+        var lineCount = Math.Max(1, (int)Math.Ceiling(textUnits * fontSize / textRect.Width));
+        return new Size(textRect.Width, lineCount * fontSize * 1.28);
     }
 
     private static OcrLayoutBlock Block(List<BoxPoint> boxPoints, params List<BoxPoint>[] lineBoxPoints) =>

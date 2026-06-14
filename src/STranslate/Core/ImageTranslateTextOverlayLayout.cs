@@ -21,7 +21,7 @@ internal sealed record ImageTranslateTextOverlayPlan(
     double CornerRadius)
 {
     internal const double MinFontSize = 6;
-    internal const double MaxFontSize = 48;
+    internal const double MaxFontSize = 128;
 }
 
 internal enum ImageTranslateOverlayTheme
@@ -63,13 +63,11 @@ internal static class ImageTranslateTextOverlayLayout
         var eraseRects = CreateEraseRects(lineRects, boundingRect, lineHeight);
         var textClipRect = CreateTextClipRect(boundingRect, eraseRects);
 
-        var fontSizeLimit = Math.Clamp(
-            lineHeight * (isMultiLine ? MultilineFontScale : SingleLineFontScale),
-            ImageTranslateTextOverlayPlan.MinFontSize,
-            ImageTranslateTextOverlayPlan.MaxFontSize);
         var fitRect = isMultiLine
             ? textRect
             : new Rect(textRect.Left, textClipRect.Top, textRect.Width, textClipRect.Height);
+        var originalLineLimit = lineHeight * (isMultiLine ? MultilineFontScale : SingleLineFontScale);
+        var fontSizeLimit = CreateRegionFillFontSizeLimit(originalLineLimit, fitRect);
         var (fontSize, shouldTrim) = FitFontSize(fontSizeLimit, fitRect, isMultiLine, measureText);
         var overlayRect = textClipRect;
         var (overlayBackgroundColor, foregroundColor) = SelectOverlayColors(overlayTheme);
@@ -171,6 +169,12 @@ internal static class ImageTranslateTextOverlayLayout
 
         return (best, false);
     }
+
+    private static double CreateRegionFillFontSizeLimit(double originalLineLimit, Rect fitRect) =>
+        Math.Clamp(
+            Math.Max(originalLineLimit, fitRect.Height * 1.2),
+            ImageTranslateTextOverlayPlan.MinFontSize,
+            ImageTranslateTextOverlayPlan.MaxFontSize);
 
     private static bool Fits(Size measured, Rect textRect) =>
         measured.Width <= textRect.Width + 0.1 &&
