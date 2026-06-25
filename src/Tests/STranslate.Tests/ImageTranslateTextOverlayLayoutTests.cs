@@ -1,4 +1,5 @@
 using STranslate.Core;
+using STranslate.Helpers;
 using STranslate.Plugin;
 using STranslate.ViewModels;
 using System.Windows;
@@ -159,7 +160,7 @@ public class ImageTranslateTextOverlayLayoutTests
         const string text = "My self media video lighting shooting tips are now publicly available";
         const double maxWidth = 260;
 
-        var measured = ImageTranslateWindowViewModel.MeasureFormattedText(
+        var measured = ImageTranslateRenderer.MeasureFormattedText(
             text,
             fontSize: 36,
             maxWidth,
@@ -184,7 +185,7 @@ public class ImageTranslateTextOverlayLayoutTests
         var plan = ImageTranslateTextOverlayLayout.Create(
             block,
             new Rect(10, 100, 960, 42),
-            (fontSize, textRect, isMultiLine) => ImageTranslateWindowViewModel.MeasureFormattedText(
+            (fontSize, textRect, isMultiLine) => ImageTranslateRenderer.MeasureFormattedText(
                 block.Text,
                 fontSize,
                 textRect.Width,
