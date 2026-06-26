@@ -270,6 +270,32 @@ public partial class Settings : ObservableObject
     [ObservableProperty] public partial bool IsImTranShowingTextControl { get; set; } = false;
     [ObservableProperty] public partial LangEnum ImageTranslateSourceLang { get; set; } = LangEnum.Auto;
     [ObservableProperty] public partial LangEnum ImageTranslateTargetLang { get; set; } = LangEnum.Auto;
+
+    /// <summary>
+    ///     图片翻译独立的语种识别引擎
+    /// </summary>
+    [ObservableProperty] public partial LanguageDetectorType ImageTranslateLanguageDetector { get; set; } = LanguageDetectorType.Local;
+
+    /// <summary>
+    ///     图片翻译独立的本地识别中英字符比例阈值
+    /// </summary>
+    [ObservableProperty] public partial double ImageTranslateLocalDetectorRate { get; set; } = 0.8;
+
+    /// <summary>
+    ///     图片翻译：原始语言识别为自动且在线识别出错时使用的源语种
+    /// </summary>
+    [ObservableProperty] public partial LangEnum ImageTranslateSourceLangIfAuto { get; set; } = LangEnum.English;
+
+    /// <summary>
+    ///     图片翻译 Auto 目标解析：第一语言
+    /// </summary>
+    [ObservableProperty] public partial LangEnum ImageTranslateFirstLanguage { get; set; } = LangEnum.ChineseSimplified;
+
+    /// <summary>
+    ///     图片翻译 Auto 目标解析：第二语言
+    /// </summary>
+    [ObservableProperty] public partial LangEnum ImageTranslateSecondLanguage { get; set; } = LangEnum.English;
+
     [ObservableProperty] public partial double ImTranWindowWidth { get; set; } = 600;
     [ObservableProperty] public partial double ImTranWindowHeight { get; set; } = 600;
 
@@ -513,6 +539,9 @@ public partial class Settings : ObservableObject
                 break;
             case nameof(LocalDetectorRate):
                 LocalDetectorRate = Math.Round(LocalDetectorRate, 2);
+                break;
+            case nameof(ImageTranslateLocalDetectorRate):
+                ImageTranslateLocalDetectorRate = Math.Round(ImageTranslateLocalDetectorRate, 2);
                 break;
             default:
                 break;
