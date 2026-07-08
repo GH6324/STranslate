@@ -317,12 +317,18 @@
     <sys:String x:Key="Standalone_OcrShowAnnotationDescription">Orijinal görüntü ile metin algılama katmanı arasında geçiş yapın.</sys:String>
     <sys:String x:Key="Standalone_OcrShowTextControlHeader">Metin Panelini Göster</sys:String>
     <sys:String x:Key="Standalone_OcrShowTextControlDescription">Sağ taraftaki metin panelini göster veya gizle.</sys:String>
+    <sys:String x:Key="Standalone_OcrLanguageHeader">OCR Penceresi Tanıma Dili</sys:String>
+    <sys:String x:Key="Standalone_OcrLanguageDescription">Bağımsız OCR penceresi tarafından kullanılan OCR tanıma dili.</sys:String>
     <sys:String x:Key="Standalone_ImTranShowAnnotatedHeader">Açıklamayı Göster</sys:String>
     <sys:String x:Key="Standalone_ImTranShowAnnotatedDescription">Çeviri sonucu ile metin algılama katmanı arasında geçiş yapın.</sys:String>
     <sys:String x:Key="Standalone_ImTranShowTextControlHeader">Metin Panelini Göster</sys:String>
     <sys:String x:Key="Standalone_ImTranShowTextControlDescription">Sağ taraftaki metin panelini göster veya gizle.</sys:String>
     <sys:String x:Key="Standalone_ImTranWindowModeHeader">Görsel Çeviri Pencere Modu</sys:String>
     <sys:String x:Key="Standalone_ImTranWindowModeDescription">Görsel çeviri sonuçlarının bağımsız pencerede mi yoksa kompakt açılır pencerede mi açılacağını seçin.</sys:String>
+    <sys:String x:Key="Standalone_ImTranOcrLanguageHeader">Görsel Çeviri OCR Tanıma Dili</sys:String>
+    <sys:String x:Key="Standalone_ImTranOcrLanguageDescription">Görsel çeviri OCR aşamasında kullanılan tanıma dili.</sys:String>
+    <sys:String x:Key="Standalone_ImTranCompactOcrLanguageHeader">Kompakt Pencerede Tanıma Dilini Göster</sys:String>
+    <sys:String x:Key="Standalone_ImTranCompactOcrLanguageDescription">Görsel çeviri kompakt penceresinin alt araç çubuğunda OCR tanıma dili seçicisini göster.</sys:String>
     <sys:String x:Key="Standalone_LayoutAnalysisHeader">Metin Bölümlendirme Ayarları</sys:String>
     <sys:String x:Key="Standalone_LayoutAnalysisDescription">Tanınan metin bloklarının nasıl bölümlendirileceğini ve birleştirileceğini yapılandırın.</sys:String>
     <sys:String x:Key="Standalone_ImTranLanguageDetector">Görsel Çeviri Dil Algılayıcısı</sys:String>
@@ -758,6 +764,8 @@
     <sys:String x:Key="OcrSettingsToolTip" xml:space="preserve">Sol Tık -> Bağımsız Pencere Ayarları&#10;Ctrl+Sol Tık -> Metin Tanıma Ayarları</sys:String>
 
     <sys:String x:Key="RecognizeLanguage">Tanıma Dili</sys:String>
+    <sys:String x:Key="General_ScreenshotOcrLanguageHeader">Ekran Görüntüsü/Sessiz OCR Tanıma Dili</sys:String>
+    <sys:String x:Key="General_ScreenshotOcrLanguageDescription">Ekran görüntüsü çevirisi ve sessiz OCR tarafından kullanılan OCR tanıma dili.</sys:String>
     <sys:String x:Key="TranslateLanguage">Çeviri Dili</sys:String>
     <sys:String x:Key="ImageTranslateLanguageIndependentToolTip">Görsel çeviri penceresindeki çeviri dili ana pencereden bağımsızdır. Buradaki değişiklikler ana pencereyi etkilemez.</sys:String>
     <sys:String x:Key="ImageTranslateLayoutAnalysisToolTip">Görsel çevirinin OCR metinlerini nasıl gruplayıp birleştireceğini seçin. Uygulamak için görsel çeviriyi yeniden çalıştırın.</sys:String>
