@@ -1631,6 +1631,9 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     {
         _ = Application.Current.Dispatcher.InvokeAsync(() =>
         {
+            // Ctrl+C+C 由其他前台应用触发，需要越过前台锁确保翻译窗口可见。
+            using var _ = WindowActivationContext.Push(WindowActivationMode.ForceForeground);
+
             var text = ClipboardHelper.GetText()?.Trim();
             if (string.IsNullOrWhiteSpace(text))
             {
